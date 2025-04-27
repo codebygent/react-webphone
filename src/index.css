@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+:root {
+  --ksk-green: #7DBAAB;
+  --ksk-pink: #E6007E;
+  --ksk-purple: #5C0F8B;
+  --ksk-grey: #54565A;
+}
+
+

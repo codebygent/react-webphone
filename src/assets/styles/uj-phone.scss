@@ -1,0 +1,167 @@
+
+.uj-webrtc-container {
+
+
+    .shadow-lg {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+    }
+
+    .bg-white {
+        background-color: #ffffff;
+    }
+
+    .text-black {
+        color: #000000;
+    }
+
+    .rounded-lg {
+        border-radius: 0.5rem;
+        /* 8px */
+    }
+
+    .p-4 {
+        padding: 1rem;
+        /* 16px */
+    }
+
+    .w-88 {
+        width: 22rem;
+        /* 352px */
+    }
+
+    .flex {
+        display: flex;
+    }
+
+    .flex-col {
+        flex-direction: column;
+    }
+
+    .items-center {
+        align-items: center;
+    }
+
+    .grid {
+        display: grid;
+    }
+
+    .grid-cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .gap-4 {
+        gap: 1rem;
+        /* 16px */
+    }
+
+    .mt-8 {
+        margin-top: 2rem;
+        /* 32px */
+    }
+
+    .text-green-600 {
+        color: #16a34a;
+    }
+
+    .button-shadow {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+
+    /* Webphone Widget */
+    #uj-webphone-widget {
+        width: 350px;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .div-height {
+        height: 450px;
+        justify-content: space-around;
+    }
+
+    .uj-btn p {
+        font-size: 22px;
+        font-weight: 600;
+        line-height: 22px;
+        margin: 0px;
+    }
+
+    .uj-btn span {
+        font-size: 11px;
+        line-height: 11px;
+        font-weight: 600;
+    }
+
+    .uj-btn.uj-btn-green {
+        color: var(--ksk-green);
+    }
+
+    .uj-btn.uj-btn-red {
+        color: var(--ksk-pink);
+    }
+
+    .uj-btn {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+
+        padding: 5px 10px;
+        border: 2px solid #b6b6bb;
+        border-radius: 6px;
+        background-color: #f8f8f8;
+        color: #222;
+        text-align: center;
+        min-width: 100px;
+        height: 46px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .uj-btn:hover {
+        background-color: var(--ksk-green);
+        color: white;
+    }
+
+    .uj-avatar .uj-name-prefix {
+        font-size: 53px;
+        text-align: center;
+        font-weight: 600;
+
+    }
+
+    .uj-avatar {
+        color: white;
+        background-color: #c6b6e9;
+        padding: 20px;
+        border-radius: 77%;
+        width: 124px;
+        margin: auto;
+    }
+
+    .callingDisplayName {
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    .callingDisplayNumber {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--ksk-grey);
+    }
+
+    .uj-line-Transfer {
+        width: 100%;
+    }
+
+    .uj-line-Transfer .uj-line-transfer-btn {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 5px;
+    }
+
+}

@@ -1,10 +1,28 @@
 import { create } from 'zustand';
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
+import { User, AuthUser, WebRTCCredential } from '../types/user.types';
+import api from './axios.config';
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = (import.meta as any).env.VITE_API_URL;
 
-const objectToFormData = (obj) => {
+interface AuthState {
+  user: AuthUser | null;
+  token: string | null;
+  isLoggedIn: boolean;
+  userDetails: User | null;
+  webrtcCredentials: WebRTCCredential | null;
+  checkEmailPreLogin: (email: string) => Promise<any>;
+  loginWithEmailPassword: (email: string, password: string) => Promise<any>;
+  sendPinCode: (mobileNumber: string) => Promise<any>;
+  loginWithMobilePincode: (contactNumber: string, pincode: string) => Promise<any>;
+  recoverPassword: (email: string) => Promise<any>;
+  logout: () => void;
+  getUserDetails: () => Promise<any>;
+  webrtcProvisioning: (extensionId: string) => Promise<any>;
+}
+
+const objectToFormData = (obj: Record<string, string>) => {
   const params = new URLSearchParams();
   Object.keys(obj).forEach(key => {
     params.append(key, obj[key]);
@@ -12,17 +30,29 @@ const objectToFormData = (obj) => {
   return params;
 };
 
-const getInitialState = () => ({
-  user: JSON.parse(localStorage.getItem('user')) || null,
-  token: localStorage.getItem('token') || null,
-  isLoggedIn: localStorage.getItem('isLoggedIn') === 'true',
-  userDetails: null, // Add this line
-});
 
-export const useAuthStore = create((set, get) => ({
+
+const getInitialState = () => {
+  const state = {
+    user: JSON.parse(localStorage.getItem('user') || 'null') as AuthUser | null,
+    token: localStorage.getItem('token') || null,
+    isLoggedIn: localStorage.getItem('isLoggedIn') === 'true',
+    userDetails: null as User | null,
+    webrtcCredentials: null as WebRTCCredential | null,
+  };
+
+  if (state.isLoggedIn && state.token && state.user) {
+    setTimeout(() => {
+      useAuthStore.getState().getUserDetails();
+      useAuthStore.getState().webrtcProvisioning(state.user.extensionId);
+    }, 0);
+  }
+  return state;
+};
+export const useAuthStore = create<AuthState>((set, get) => ({
   ...getInitialState(),
 
-  checkEmailPreLogin: async (email) => {
+  checkEmailPreLogin: async (email: string) => {
     try {
       const payload = objectToFormData({
         email: email.trim()
@@ -37,7 +67,7 @@ export const useAuthStore = create((set, get) => ({
           }
         }
       );
-      
+
       return response.data;
     } catch (error) {
       console.error('Pre-login check error:', error);
@@ -45,14 +75,14 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  loginWithEmailPassword: async (email, password) => {
+  loginWithEmailPassword: async (email: string, password: string) => {
     try {
       const payload = objectToFormData({
         email: email.trim(),
         password: CryptoJS.MD5(password).toString()
       });
 
-      const response = await axios.post(
+      const response = await axios.post<any>(
         `${API_URL}/vmapi/user/login/loginwithgooglerecaptcha/`,
         payload,
         {
@@ -64,26 +94,24 @@ export const useAuthStore = create((set, get) => ({
 
       const data = response.data;
       if (data.success) {
+        const userData: AuthUser = {
+          email,
+          role: data.role,
+          lang: data.lang,
+          voiceMailbox: data.voiceMailbox,
+          active: data.active,
+          extensionId: data.extensionId,
+          permissions: data.permissions,
+        };
+
         set({
-          user: {
-            email,
-            lang: data.lang,
-            voiceMailbox: data.voiceMailbox,
-            active: data.active,
-            extensionId: data.extensionId,
-          },
+          user: userData,
           token: data.token,
           isLoggedIn: true,
         });
 
         localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify({
-          email,
-          lang: data.lang,
-          voiceMailbox: data.voiceMailbox,
-          active: data.active,
-          extensionId: data.extensionId,
-        }));
+        localStorage.setItem('user', JSON.stringify(userData));
         localStorage.setItem('isLoggedIn', 'true');
         get().getUserDetails();
         return { success: true };
@@ -96,7 +124,7 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  sendPinCode: async (mobileNumber) => {
+  sendPinCode: async (mobileNumber: string) => {
     try {
       const payload = objectToFormData({
         mobileNumber: mobileNumber.trim()
@@ -111,7 +139,7 @@ export const useAuthStore = create((set, get) => ({
           }
         }
       );
-      
+
       return response.data;
     } catch (error) {
       console.error('Send PIN code error:', error);
@@ -119,7 +147,7 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  loginWithMobilePincode: async (contactNumber, pincode) => {
+  loginWithMobilePincode: async (contactNumber: string, pincode: string) => {
     try {
       const payload = objectToFormData({
         userName: contactNumber.trim(),
@@ -138,26 +166,23 @@ export const useAuthStore = create((set, get) => ({
 
       const data = response.data;
       if (data.success) {
-        set({
-          user: {
-            mobile: contactNumber,
-            lang: data.lang,
-            voiceMailbox: data.voiceMailbox,
-            active: data.active,
-            extensionId: data.extensionId,
-          },
-          token: data.token,
-          isLoggedIn: true,
-        });
-
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify({
+        const userData: AuthUser = {
           mobile: contactNumber,
           lang: data.lang,
           voiceMailbox: data.voiceMailbox,
           active: data.active,
           extensionId: data.extensionId,
-        }));
+          permissions: data.permissions,
+        };
+
+        set({
+          user: userData,
+          token: data.token,
+          isLoggedIn: true,
+        });
+
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(userData));
         localStorage.setItem('isLoggedIn', 'true');
         get().getUserDetails();
         return { success: true };
@@ -170,7 +195,7 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  recoverPassword: async (email) => {
+  recoverPassword: async (email: string) => {
     try {
       const payload = objectToFormData({
         email: email.trim()
@@ -185,7 +210,7 @@ export const useAuthStore = create((set, get) => ({
           }
         }
       );
-      
+
       return response.data;
     } catch (error) {
       console.error('Password recovery error:', error);
@@ -202,42 +227,32 @@ export const useAuthStore = create((set, get) => ({
 
   getUserDetails: async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        return { success: false, message: 'No token found' };
-      }
-
-      const response = await axios.get(
-        `${API_URL}/vmapi/user/getuser/`,
-        {
-          params: { token },
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        }
-      );
-
+      const response = await api.get('/vmapi/user/getuser/');
       const data = response.data;
       if (data.success) {
         set({ userDetails: data.user });
-        return { success: true, data };
       } else {
-        return { success: false, message: data.message };
       }
     } catch (error) {
       console.error('Get user details error:', error);
-      return { success: false, message: 'Server Error' };
     }
   },
 
-  // // Utility functions
-  // validateEmail: (email) => {
-  //   const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-  //   return emailRegex.test(email);
-  // },
+  webrtcProvisioning: async (extensionId: string) => {
+    try {
+      const response = await api.get('/vmapi/user/webrtcProvisioning/', {
+        params: { extensionId }
+      });
 
-  // validateMobileNumber: (number) => {
-  //   const numberRegex = /^[+]?([0-9]*[\.\s\-\(\)]|[0-9]+){8,24}$/;
-  //   return numberRegex.test(number);
-  // }
+      const data = response.data;
+      if (data.success && data.credential) {
+        set({ webrtcCredentials: data.credential });
+        return { success: true, data: data.credential };
+      }
+      return { success: false, message: 'Failed to get WebRTC credentials' };
+    } catch (error) {
+      console.error('WebRTC provisioning error:', error);
+      return { success: false, message: 'Server Error' };
+    }
+  },
 }));

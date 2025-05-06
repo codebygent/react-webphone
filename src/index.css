@@ -6,5 +6,7 @@
   --ksk-purple: #5C0F8B;
   --ksk-grey: #54565A;
 }
-
+.ant-card.jz-card .ant-card-body{
+  padding: 0px;
+}
 

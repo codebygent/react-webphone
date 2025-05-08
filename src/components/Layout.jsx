@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom';
 import UserMenu from './UserMenu';
 import { NavLink } from 'react-router-dom';
 import { Card } from 'antd';
+import * as phone from '../store/uj-phone';
 
 export default function Layout() {
   return (

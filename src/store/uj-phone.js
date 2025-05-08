@@ -1,100 +1,71 @@
+import $ from 'jquery';
+import * as SIP from 'sip.js';
+import moment from 'moment';
+import { Line } from '../types/line.types';
+import {message} from 'antd'
 //#region Global Settings
 // ===============
 const appversion = "0.3.29";
 const sipjsversion = "0.20.0";
 const navUserAgent = window.navigator.userAgent;  // TO DO change to Navigator.userAgentData
-const instanceID = String(Date.now());
 const localDB = window.localStorage;
 
+let profileUserID = null;   // Internal reference ID. (DON'T CHANGE THIS!)
+let profileName = null;     // eg: Keyla James
+let wssServer = null;       // eg: raspberrypi.local
+let WebSocketPort = null;   // eg: 444 | 4443 
+let ServerPath = null;      // eg: /ws
+let SipDomain = null;       // eg: raspberrypi.local
+let SipUsername = null;     // eg: webrtc
+let SipPassword = null;     // eg: webrtc
 
-let profileUserID = getDbItem("profileUserID", null);   // Internal reference ID. (DON'T CHANGE THIS!)
-let profileName = getDbItem("profileName", null);       // eg: Keyla James
-let wssServer = getDbItem("wssServer", null);           // eg: raspberrypi.local
-let WebSocketPort = getDbItem("WebSocketPort", null);   // eg: 444 | 4443
-let ServerPath = getDbItem("ServerPath", null);         // eg: /ws
-let SipDomain = getDbItem("SipDomain", null);           // eg: raspberrypi.local
-let SipUsername = getDbItem("SipUsername", null);       // eg: webrtc
-let SipPassword = getDbItem("SipPassword", null);       // eg: webrtc
+let TransportConnectionTimeout = 15;          // The timeout in seconds for the initial connection
+let TransportReconnectionAttempts = 999;      // Number of reconnection attempts
+let TransportReconnectionTimeout = 3;         // Seconds between reconnection attempts
 
-let SingleInstance = (getDbItem("SingleInstance", "1") == "1");      // Un-registers this account if the phone is opened in another tab/window
+let VoiceMailSubscribe = false;               // Enable Subscribe to voicemail
+let SubscribeVoicemailExpires = 300;         // Voicemail Subscription expiry time (seconds)
+let ContactUserName = "";                     // Optional name for contact header uri
+let hostingPrefix = "/";                       // Optional prefix
+let userAgentStr = "Browser Phone " + appversion + " (SIPJS - " + sipjsversion + ") " + navUserAgent;
+let RegisterExpires = 300;                    // Registration expiry time (seconds)
+let RegisterExtraHeaders = "{}";              // Headers for register process
+let RegisterExtraContactParams = "{}";        // Parameters for contact header
+let RegisterContactParams = "{}";             // Parameters for contact URI
+let WssInTransport = true;                    // Use wss in SIP URIs
+let IpInContact = true;                       // Use IP in Contact header
+let BundlePolicy = "balanced";                // SDP Media Bundle policy
+let IceStunServerJson = "";                   // ICE Server config
+let IceStunCheckTimeout = 500;                // ICE/STUN timeout (ms)
+let InviteExtraHeaders = "{}";                // Extra headers for INVITE
 
-let TransportConnectionTimeout = parseInt(getDbItem("TransportConnectionTimeout", 15));          // The timeout in seconds for the initial connection to make on the web socket port
-let TransportReconnectionAttempts = parseInt(getDbItem("TransportReconnectionAttempts", 999));   // The number of times to attempt to reconnect to a WebSocket when the connection drops.
-let TransportReconnectionTimeout = parseInt(getDbItem("TransportReconnectionTimeout", 3));       // The time in seconds to wait between WebSocket reconnection attempts.
+let NoAnswerTimeout = 120;                    // Auto Busy Here timeout
+let AutoAnswerEnabled = false;                // Auto answer calls
+let DoNotDisturbEnabled = false;              // Reject inbound calls
+let CallWaitingEnabled = true;                // Allow call waiting
 
-let VoiceMailSubscribe = (getDbItem("VoiceMailSubscribe", "1") == "1");                // Enable Subscribe to voicemail
-let VoicemailDid = getDbItem("VoicemailDid", "");                                      // Number to dial for VoicemialMain()
-let SubscribeVoicemailExpires = parseInt(getDbItem("SubscribeVoicemailExpires", 300)); // Voceimail Subscription expiry time (in seconds)
-let ContactUserName = getDbItem("ContactUserName", "");                                // Optional name for contact header uri
-let hostingPrefix = getDbItem("hostingPrefix", "");                                // Optional name for contact header uri
-let userAgentStr = getDbItem("UserAgentStr", "Browser Phone " + appversion + " (SIPJS - " + sipjsversion + ") " + navUserAgent);   // Set this to whatever you want.
-let RegisterExpires = parseInt(getDbItem("RegisterExpires", 300));                     // Registration expiry time (in seconds)
-let RegisterExtraHeaders = getDbItem("RegisterExtraHeaders", "{}");                    // Parsable Json string of headers to include in register process. eg: '{"foo":"bar"}'
-let RegisterExtraContactParams = getDbItem("RegisterExtraContactParams", "{}");        // Parsable Json string of extra parameters add to the end (after >) of contact header during register. eg: '{"foo":"bar"}'
-let RegisterContactParams = getDbItem("RegisterContactParams", "{}");                  // Parsable Json string of extra parameters added to contact URI during register. eg: '{"foo":"bar"}'
-let WssInTransport = (getDbItem("WssInTransport", "1") == "1");                        // Set the transport parameter to wss when used in SIP URIs. (Required for ujApp as it doesn't support Path)
-let IpInContact = (getDbItem("IpInContact", "1") == "1");                              // Set a random IP address as the host value in the Contact header field and Via sent-by parameter. (Suggested for ujApp)
-let BundlePolicy = getDbItem("BundlePolicy", "balanced");                              // SDP Media Bundle: max-bundle | max-compat | balanced https://webrtcstandards.info/sdp-bundle/
-let IceStunServerJson = getDbItem("IceStunServerJson", "");                            // Sets the JSON string for ice Server. Default: [{ "urls": "stun:stun.l.google.com:19302" }] Must be https://developer.mozilla.org/en-US/docs/Web/API/RTCConfiguration/iceServers
-let IceStunCheckTimeout = parseInt(getDbItem("IceStunCheckTimeout", 500));             // Set amount of time in milliseconds to wait for the ICE/STUN server
-let InviteExtraHeaders = getDbItem("InviteExtraHeaders", "{}");                       // Extra SIP headers to be included in the initial INVITE message for each call. (Added to the extra headers in the DialByLine() parameters. e.g {"foo":"bar"})
+let AutoGainControl = true;                   // Auto mic volume
+let EchoCancellation = true;                  // Remove echo
+let NoiseSuppression = true;                  // Reduce noise
 
-let NoAnswerTimeout = parseInt(getDbItem("NoAnswerTimeout", 120));          // Time in seconds before automatic Busy Here sent
-let AutoAnswerEnabled = (getDbItem("AutoAnswerEnabled", "0") == "1");       // Automatically answers the phone when the call comes in, if you are not on a call already
-let DoNotDisturbEnabled = (getDbItem("DoNotDisturbEnabled", "0") == "1");   // Rejects any inbound call, while allowing outbound calls
-let CallWaitingEnabled = (getDbItem("CallWaitingEnabled", "1") == "1");     // Rejects any inbound call if you are on a call already.
-let RecordAllCalls = (getDbItem("RecordAllCalls", "0") == "1");             // Starts Call Recording when a call is established.
-let SelectRingingLine = (getDbItem("SelectRingingLine", "1") == "1");       // Selects the ringing line if you are not on another call ()
 
-let AutoGainControl = (getDbItem("AutoGainControl", "1") == "1");        // Attempts to adjust the microphone volume to a good audio level. (OS may be better at this)
-let EchoCancellation = (getDbItem("EchoCancellation", "1") == "1");      // Attempts to remove echo over the line.
-let NoiseSuppression = (getDbItem("NoiseSuppression", "1") == "1");      // Attempts to clear the call quality of noise.
-let maxFrameRate = getDbItem("FrameRate", "");                           // Suggests a frame rate to your webcam if possible.
-let NotificationsActive = (getDbItem("Notifications", "0") == "1");
-
-let MaxDataStoreDays = parseInt(getDbItem("MaxDataStoreDays", 0));          // Defines the maximum amount of days worth of data (calls, recordings, messages, etc) to store locally. 0=Stores all data always. >0 Trims n days back worth of data at various events where. 
-
-let DidLength = parseInt(getDbItem("DidLength", 6));                 // DID length from which to decide if an incoming caller is a "contact" or an "extension".
-let MaxDidLength = parseInt(getDbItem("MaxDidLength", 16));          // Maximum length of any DID number including international dialled numbers.
-let DisplayDateFormat = getDbItem("DateFormat", "YYYY-MM-DD");       // The display format for all dates. https://momentjs.com/docs/#/displaying/
-let DisplayTimeFormat = getDbItem("TimeFormat", "h:mm:ss A");        // The display format for all times. https://momentjs.com/docs/#/displaying/
-let Language = getDbItem("Language", "auto");                        // Overrides the language selector or "automatic". Must be one of availableLang[]. If not defaults to en.
+let MaxDidLength = 16;                        // Max DID length
 
 // Permission Settings
-let EnableTextMessaging = (getDbItem("EnableTextMessaging", "1") == "1");               // Enables the Text Messaging
-let EnableTransfer = (getDbItem("EnableTransfer", "1") == "1");                         // Controls Transferring during a call
-let EnableujCollab = (getDbItem("EnableujCollab", "1") == "1");                     // Controls ujCollab during a call
-let AutoAnswerPolicy = getDbItem("AutoAnswerPolicy", "allow");                          // allow = user can choose | disabled = feature is disabled | enabled = feature is always on
-let DoNotDisturbPolicy = getDbItem("DoNotDisturbPolicy", "allow");                      // allow = user can choose | disabled = feature is disabled | enabled = feature is always on
-let CallWaitingPolicy = getDbItem("CallWaitingPolicy", "allow");                        // allow = user can choose | disabled = feature is disabled | enabled = feature is always on
-let CallRecordingPolicy = getDbItem("CallRecordingPolicy", "allow");                    // allow = user can choose | disabled = feature is disabled | enabled = feature is always on
-let IntercomPolicy = getDbItem("IntercomPolicy", "enabled");                            // disabled = feature is disabled | enabled = feature is always on
-let EnableAccountSettings = (getDbItem("EnableAccountSettings", "1") == "1");           // Controls the Account tab in Settings
-let EnableAppearanceSettings = (getDbItem("EnableAppearanceSettings", "1") == "1");     // Controls the Appearance tab in Settings
-let EnableNotificationSettings = (getDbItem("EnableNotificationSettings", "1") == "1"); // Controls the Notifications tab in Settings
-let EnableAlphanumericDial = (getDbItem("EnableAlphanumericDial", "0") == "1");         // Allows calling /[^\da-zA-Z\*\#\+\-\_\.\!\~\'\(\)]/g default is /[^\d\*\#\+]/g 
-let EnableTextExpressions = (getDbItem("EnableTextExpressions", "1") == "1");           // Enables Expressions (Emoji) glyphs when texting
-let EnableTextDictate = (getDbItem("EnableTextDictate", "1") == "1");                   // Enables Dictate (speech-to-text) when texting
-let EnableRingtone = (getDbItem("EnableRingtone", "1") == "1");                         // Enables a ring tone when an inbound call comes in.  (media/Ringtone_1.mp3)
-
-let ChatEngine = getDbItem("ChatEngine", "SIMPLE");    // Select the chat engine XMPP | SIMPLE
-
+let AutoAnswerPolicy = "allow";               // Auto answer policy
+let DoNotDisturbPolicy = "allow";             // DND policy  
+let IntercomPolicy = "enabled";               // Intercom policy
+let EnableAlphanumericDial = false;           // Allow alpha characters in dialing
+let EnableRingtone = true;                    // Enable ringtone
 
 // System variables
 // ================
 let userAgent = null;
-let CanvasCollection = [];
 let _selectedLine = null;
-let windowObj = null;
 let alertObj = null;
-let confirmObj = null;
-let promptObj = null;
-let menuObj = null;
-let HasVideoDevice = false;
 let HasAudioDevice = false;
 let HasSpeakerDevice = false;
 let AudioinputDevices = [];
-let VideoinputDevices = [];
 let SpeakerDevices = [];
 let Lines = [];
 let audioBlobs = {}
@@ -103,23 +74,12 @@ let _lineObj = null;
 let telNumericRegEx = /[^\d\*\#\+]/g
 let telAlphanumericRegEx = /[^\da-zA-Z\*\#\+\-\_\.\!\~\'\(\)]/g
 
-let settingsMicrophoneStream = null;
-let settingsMicrophoneStreamTrack = null;
-
-let CallRecordingsIndexDb = null;
 //#endregion
 
 //#region Utilities
 // =========
-function uID() {
-    return Date.now() + Math.floor(Math.random() * 10000).toString(16).toUpperCase();
-}
 function utcDateNow() {
     return moment().utc().format("YYYY-MM-DD HH:mm:ss UTC");
-}
-function getDbItem(itemIndex, defaultValue) {
-    if (localDB.getItem(itemIndex) != null) return localDB.getItem(itemIndex);
-    return defaultValue;
 }
 function getAudioSrcID() {
     var id = localDB.getItem("AudioSrcId");
@@ -132,24 +92,6 @@ function getAudioOutputID() {
 function getRingerOutputID() {
     var id = localDB.getItem("RingOutputId");
     return (id != null) ? id : "default";
-}
-function formatDuration(seconds) {
-    var sec = Math.floor(parseFloat(seconds));
-    if (sec < 0) {
-        return sec;
-    }
-    else if (sec >= 0 && sec < 60) {
-        return sec + " " + ((sec > 1) ? lang.seconds_plural : lang.second_single);
-    }
-    else if (sec >= 60 && sec < 60 * 60) { // greater then a minute and less then an hour
-        var duration = moment.duration(sec, 'seconds');
-        return duration.minutes() + " " + ((duration.minutes() > 1) ? lang.minutes_plural : lang.minute_single) + " " + duration.seconds() + " " + ((duration.seconds() > 1) ? lang.seconds_plural : lang.second_single);
-    }
-    else if (sec >= 60 * 60 && sec < 24 * 60 * 60) { // greater than an hour and less then a day
-        var duration = moment.duration(sec, 'seconds');
-        return duration.hours() + " " + ((duration.hours() > 1) ? lang.hours_plural : lang.hour_single) + " " + duration.minutes() + " " + ((duration.minutes() > 1) ? lang.minutes_plural : lang.minute_single) + " " + duration.seconds() + " " + ((duration.seconds() > 1) ? lang.seconds_plural : lang.second_single);
-    }
-    //  Otherwise.. this is just too long
 }
 function formatShortDuration(seconds) {
     var sec = Math.floor(parseFloat(seconds));
@@ -168,45 +110,6 @@ function formatShortDuration(seconds) {
         return ((duration.hours() > 9) ? duration.hours() : "0" + duration.hours()) + ":" + ((duration.minutes() > 9) ? duration.minutes() : "0" + duration.minutes()) + ":" + ((duration.seconds() > 9) ? duration.seconds() : "0" + duration.seconds());
     }
     //  Otherwise.. this is just too long
-}
-function formatBytes(bytes, decimals) {
-    if (bytes === 0) return "0 " + lang.bytes;
-    var k = 1024;
-    var dm = (decimals && decimals >= 0) ? decimals : 2;
-    var sizes = [lang.bytes, lang.kb, lang.mb, lang.gb, lang.tb, lang.pb, lang.eb, lang.zb, lang.yb];
-    var i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
-}
-function getFilter(filter, keyword) {
-    if (filter.indexOf(",", filter.indexOf(keyword + ": ") + keyword.length + 2) != -1) {
-        return filter.substring(filter.indexOf(keyword + ": ") + keyword.length + 2, filter.indexOf(",", filter.indexOf(keyword + ": ") + keyword.length + 2));
-    }
-    else {
-        return filter.substring(filter.indexOf(keyword + ": ") + keyword.length + 2);
-    }
-}
-function base64toBlob(base64Data, contentType) {
-    if (base64Data.indexOf("," != -1)) base64Data = base64Data.split(",")[1]; // [data:image/png;base64] , [xxx...]
-    var byteCharacters = atob(base64Data);
-    var slicesCount = Math.ceil(byteCharacters.length / 1024);
-    var byteArrays = new Array(slicesCount);
-    for (var s = 0; s < slicesCount; ++s) {
-        var begin = s * 1024;
-        var end = Math.min(begin + 1024, byteCharacters.length);
-        var bytes = new Array(end - begin);
-        for (var offset = begin, i = 0; offset < end; ++i, ++offset) {
-            bytes[i] = byteCharacters[offset].charCodeAt(0);
-        }
-        byteArrays[s] = new Uint8Array(bytes);
-    }
-    return new Blob(byteArrays, { type: contentType });
-}
-function MakeDataArray(defaultValue, count) {
-    var rtnArray = new Array(count);
-    for (var i = 0; i < rtnArray.length; i++) {
-        rtnArray[i] = defaultValue;
-    }
-    return rtnArray;
 }
 //#endregion
 
@@ -248,223 +151,22 @@ $(window).on("online", function () {
     console.log('Online!');
     ReconnectTransport();
 });
-$(window).on("keypress", function (event) {
-    // TO DO Add Shortcuts
 
-    // console.log(event);
-    if (event.ctrlKey) {
-        // You have the Ctrl Key pressed, this could be a Call Function
-        // Blind Transfer the current Call
-        if (event.key == "b") {
-            event.preventDefault();
-            console.log("Keyboard Shortcut for: Start Blind Transfer");
-        }
-        // Attended Transfer the current Call
-        if (event.key == "a") {
-            event.preventDefault();
-            console.log("Keyboard Shortcut for: Start Attended Transfer");
-        }
-        // Hold (Toggle)
-        if (event.key == "h") {
-            event.preventDefault();
-            console.log("Keyboard Shortcut for: Hold Toggle");
-        }
-        // Mute (Toggle)
-        if (event.key == "m") {
-            event.preventDefault();
-            console.log("Keyboard Shortcut for: Mute Toggle");
-        }
-        // End current call
-        if (event.key == "e") {
-            event.preventDefault();
-            console.log("Keyboard Shortcut for: End current call");
-        }
-        // Recording (Start/Stop)
-        if (event.key == "r") {
-            event.preventDefault();
-            console.log("Keyboard Shortcut for: Recording Toggle");
-        }
-        // Select line 1-9
-        if (event.key == "1" || event.key == "2" | event.key == "3" || event.key == "4" || event.key == "5" || event.key == "6" || event.key == "7" || event.key == "8" || event.key == "9") {
-            event.preventDefault();
-            console.log("Keyboard Shortcut for: Select Line", event.key);
-        }
-    }
-});
-$(document).ready(function () {
-
-    // We will use the IndexDB, so connect to it now, and perform any upgrade options
-    PrepareIndexDB();
-
-    // Load phoneOptions
-    // =================
-    // Note: These options can be defined in the containing HTML page, and simply defined as a global variable
-    // var phoneOptions = {} // would work in index.html
-    // Even if the setting is defined on the database, these variables get loaded after.
-
-    var options = (typeof phoneOptions !== 'undefined') ? phoneOptions : {};
-    if (options.profileName !== undefined) profileName = options.profileName;
-    if (options.wssServer !== undefined) wssServer = options.wssServer;
-    if (options.WebSocketPort !== undefined) WebSocketPort = options.WebSocketPort;
-    if (options.ServerPath !== undefined) ServerPath = options.ServerPath;
-    if (options.SipDomain !== undefined) SipDomain = options.SipDomain;
-    if (options.SipUsername !== undefined) SipUsername = options.SipUsername;
-    if (options.SipPassword !== undefined) SipPassword = options.SipPassword;
-    if (options.SingleInstance !== undefined) SingleInstance = options.SingleInstance;
-    if (options.TransportConnectionTimeout !== undefined) TransportConnectionTimeout = options.TransportConnectionTimeout;
-    if (options.TransportReconnectionAttempts !== undefined) TransportReconnectionAttempts = options.TransportReconnectionAttempts;
-    if (options.TransportReconnectionTimeout !== undefined) TransportReconnectionTimeout = options.TransportReconnectionTimeout;
-    if (options.VoiceMailSubscribe !== undefined) VoiceMailSubscribe = options.VoiceMailSubscribe;
-    if (options.VoicemailDid !== undefined) VoicemailDid = options.VoicemailDid;
-    if (options.SubscribeVoicemailExpires !== undefined) SubscribeVoicemailExpires = options.SubscribeVoicemailExpires;
-    if (options.ContactUserName !== undefined) ContactUserName = options.ContactUserName;
-    if (options.userAgentStr !== undefined) userAgentStr = options.userAgentStr;
-    if (options.hostingPrefix !== undefined) hostingPrefix = options.hostingPrefix;
-    if (options.RegisterExpires !== undefined) RegisterExpires = options.RegisterExpires;
-    if (options.RegisterExtraHeaders !== undefined) RegisterExtraHeaders = options.RegisterExtraHeaders;
-    if (options.RegisterExtraContactParams !== undefined) RegisterExtraContactParams = options.RegisterExtraContactParams;
-    if (options.RegisterContactParams !== undefined) RegisterContactParams = options.RegisterContactParams;
-    if (options.WssInTransport !== undefined) WssInTransport = options.WssInTransport;
-    if (options.IpInContact !== undefined) IpInContact = options.IpInContact;
-    if (options.BundlePolicy !== undefined) BundlePolicy = options.BundlePolicy;
-    if (options.IceStunServerJson !== undefined) IceStunServerJson = options.IceStunServerJson;
-    if (options.IceStunCheckTimeout !== undefined) IceStunCheckTimeout = options.IceStunCheckTimeout;
-    if (options.ProfileDisplayPrefix !== undefined) ProfileDisplayPrefix = options.ProfileDisplayPrefix;
-    if (options.ProfileDisplayPrefixSeparator !== undefined) ProfileDisplayPrefixSeparator = options.ProfileDisplayPrefixSeparator;
-    if (options.InviteExtraHeaders !== undefined) InviteExtraHeaders = options.InviteExtraHeaders;
-    if (options.NoAnswerTimeout !== undefined) NoAnswerTimeout = options.NoAnswerTimeout;
-    if (options.AutoAnswerEnabled !== undefined) AutoAnswerEnabled = options.AutoAnswerEnabled;
-    if (options.DoNotDisturbEnabled !== undefined) DoNotDisturbEnabled = options.DoNotDisturbEnabled;
-    if (options.CallWaitingEnabled !== undefined) CallWaitingEnabled = options.CallWaitingEnabled;
-    if (options.RecordAllCalls !== undefined) RecordAllCalls = options.RecordAllCalls;
-    if (options.SelectRingingLine !== undefined) SelectRingingLine = options.SelectRingingLine;
-    
-    if (options.AutoGainControl !== undefined) AutoGainControl = options.AutoGainControl;
-    if (options.EchoCancellation !== undefined) EchoCancellation = options.EchoCancellation;
-    if (options.NoiseSuppression !== undefined) NoiseSuppression = options.NoiseSuppression;
-    if (options.maxFrameRate !== undefined) maxFrameRate = options.maxFrameRate;
-    if (options.NotificationsActive !== undefined) NotificationsActive = options.NotificationsActive;
-    if (options.StreamBuffer !== undefined) StreamBuffer = options.StreamBuffer;
-    if (options.PosterJpegQuality !== undefined) PosterJpegQuality = options.PosterJpegQuality;
-    if (options.RecordingLayout !== undefined) RecordingLayout = options.RecordingLayout;
-    if (options.DidLength !== undefined) DidLength = options.DidLength;
-    if (options.MaxDidLength !== undefined) MaxDidLength = options.MaxDidLength;
-    if (options.DisplayDateFormat !== undefined) DisplayDateFormat = options.DisplayDateFormat;
-    if (options.DisplayTimeFormat !== undefined) DisplayTimeFormat = options.DisplayTimeFormat;
-    if (options.Language !== undefined) Language = options.Language;
-    if (options.SortByTypeOrder !== undefined) SortByTypeOrder = options.SortByTypeOrder;
-    if (options.EnableTextMessaging !== undefined) EnableTextMessaging = options.EnableTextMessaging;
-    if (options.DisableFreeDial !== undefined) DisableFreeDial = options.DisableFreeDial;
-    if (options.EnableTransfer !== undefined) EnableTransfer = options.EnableTransfer;
-    if (options.EnableujCollab !== undefined) EnableujCollab = options.EnableujCollab;
-    if (options.AutoAnswerPolicy !== undefined) AutoAnswerPolicy = options.AutoAnswerPolicy;
-    if (options.DoNotDisturbPolicy !== undefined) DoNotDisturbPolicy = options.DoNotDisturbPolicy;
-    if (options.CallWaitingPolicy !== undefined) CallWaitingPolicy = options.CallWaitingPolicy;
-    if (options.CallRecordingPolicy !== undefined) CallRecordingPolicy = options.CallRecordingPolicy;
-    if (options.IntercomPolicy !== undefined) IntercomPolicy = options.IntercomPolicy;
-    if (options.EnableAccountSettings !== undefined) EnableAccountSettings = options.EnableAccountSettings;
-    if (options.EnableAppearanceSettings !== undefined) EnableAppearanceSettings = options.EnableAppearanceSettings;
-    if (options.EnableNotificationSettings !== undefined) EnableNotificationSettings = options.EnableNotificationSettings;
-    if (options.EnableAlphanumericDial !== undefined) EnableAlphanumericDial = options.EnableAlphanumericDial;
-    if (options.EnableTextExpressions !== undefined) EnableTextExpressions = options.EnableTextExpressions;
-    if (options.EnableTextDictate !== undefined) EnableTextDictate = options.EnableTextDictate;
-    if (options.EnableRingtone !== undefined) EnableRingtone = options.EnableRingtone;
-    if (options.ChatEngine !== undefined) ChatEngine = options.ChatEngine;
-
-    // Single Instance Check 
-    if (SingleInstance == true) {
-        console.log("Instance ID :", instanceID);
-        // First we set (or try to set) the instance ID
-        localDB.setItem("InstanceId", instanceID);
-
-        // Now we attach a listener
-        window.addEventListener('storage', onLocalStorageEvent, false);
-    }
-
-});
-
-function onLocalStorageEvent(event) {
-    if (event.key == "InstanceId") {
-        // Another script is writing to the local storage,
-        // because the event lister is attached after the 
-        // Instance ID, its from another window/tab/script.
-
-        // Because you cannot change focus to another tab (even
-        // from a tab with the same domain), and because you cannot
-        // close a tab, the best we can do is de-register this
-        // UserAgent, so that we are only registered here.
-
-        Unregister();
-        // TOO: what if you re-register?
-        // Should this unload the entire page, what about calls? 
-    }
-}
-function PrepareIndexDB() {
-    // Call Recordings
-    // ===============
-    const CallRecordingsOpenRequest = window.indexedDB.open("CallRecordings", 1);
-    // If this is the first visit to this page, this would have now made an empty IndexDB
-    CallRecordingsOpenRequest.onerror = function (event) {
-        console.error("CallRecordings DBOpenRequest Error:", event);
-    }
-    CallRecordingsOpenRequest.onupgradeneeded = function (event) {
-        console.warn("Upgrade Required for CallRecordings IndexDB... probably because of first time use.");
-        CallRecordingsIndexDb = event.target.result;
-        // Now the CallRecordingsIndexDb is activated, but its still empty
-
-        if (CallRecordingsIndexDb.objectStoreNames.contains("Recordings") == false) {
-            // Create Object Store (Note: This can only be done here .onupgradeneeded)
-            var objectStore = CallRecordingsIndexDb.createObjectStore("Recordings", { keyPath: "uID" });
-            objectStore.createIndex("sessionid", "sessionid", { unique: false });
-            objectStore.createIndex("bytes", "bytes", { unique: false });
-            objectStore.createIndex("type", "type", { unique: false });
-            objectStore.createIndex("mediaBlob", "mediaBlob", { unique: false });
-            console.log("IndexDB created ObjectStore Recordings");
-        }
-        else {
-            console.warn("IndexDB requested upgrade, but object store was in place");
-        }
-        // Will fire .onsuccess now
-    }
-    CallRecordingsOpenRequest.onsuccess = function (event) {
-        CallRecordingsIndexDb = event.target.result;
-
-        CallRecordingsIndexDb.onerror = function (event) {
-            console.error("IndexDB Error:", event);
-        }
-
-        // Double check structure
-        if (CallRecordingsIndexDb.objectStoreNames.contains("Recordings") == false) {
-            console.warn("IndexDB is open but Recordings does not exist.");
-            // Close the connection to the database
-            CallRecordingsIndexDb.close();
-            console.log("IndexDB is closed.");
-            // Drop the Database
-            const DBDeleteRequest = window.indexedDB.deleteDatabase("CallRecordings");
-            DBDeleteRequest.onerror = function (event) {
-                console.error("Error deleting database CallRecordings");
-            }
-            DBDeleteRequest.onsuccess = function (event) {
-                console.log("Database deleted successfully");
-
-                // Call the PrepareIndexDB() function again, this time it should make the DB correctly.
-                window.setTimeout(function () {
-                    // This could create a loop if the database keeps failing to create correctly.
-                    PrepareIndexDB();
-                }, 500);
-            }
-            return;
-        }
-        console.log("IndexDB connected to CallRecordings");
-    }
-}
 //#endregion
 
 
 // #region Init UI
 // =======
 
-function InitUi() {
+export function InitUi(data) {
+    
+    profileName = data.userDisplayName;
+    wssServer = data.wsDomain;
+    SipDomain = data.sipDomain;
+    SipUsername = data.username;
+    SipPassword = data.password;
+    profileUserID = data.extensionId;
+
     PreloadAudioFiles()
     CreateUserAgent();
     RegisterEvents();
@@ -906,7 +608,7 @@ function ReceiveCall(session) {
             onSessionReceivedBye(lineObj, sip)
         },
         onMessage: function (sip) {
-            onSessionReceivedMessage(lineObj, sip);
+            // onSessionReceivedMessage(lineObj, sip);
         },
         onInvite: function (sip) {
             onSessionReinvited(lineObj, sip);
@@ -1345,97 +1047,6 @@ function onSessionReceivedBye(lineObj, response) {
 function onSessionReinvited(lineObj, response) {
     
 }
-function onSessionReceivedMessage(lineObj, response) {
-    var messageType = (response.request.headers["Content-Type"].length >= 1) ? response.request.headers["Content-Type"][0].parsed : "Unknown";
-    if (messageType.indexOf("application/x-asterisk-confbridge-event") > -1) {
-        // ujCollab Events JSON
-        var msgJson = JSON.parse(response.request.body);
-
-        var session = lineObj.SipSession;
-        if (!session.data.ConfbridgeChannels) session.data.ConfbridgeChannels = [];
-        if (!session.data.ConfbridgeEvents) session.data.ConfbridgeEvents = [];
-
-        if (msgJson.type == "ConfbridgeStart") {
-            console.log("ConfbridgeStart!");
-        }
-        else if (msgJson.type == "ConfbridgeWelcome") {
-            console.log("Welcome to the ujApp ujCollab");
-            console.log("Bridge ID:", msgJson.bridge.id);
-            console.log("Bridge Name:", msgJson.bridge.name);
-            console.log("Created at:", msgJson.bridge.creationtime);
-
-            session.data.ConfbridgeChannels = msgJson.channels; // Write over this
-            session.data.ConfbridgeChannels.forEach(function (chan) {
-                // The mute and unmute status doesn't appear to be a realtime state, only what the 
-                // startmuted= setting of the default profile is.
-                console.log(chan.caller.name, "Is in the ujCollab. Muted:", chan.muted, "Admin:", chan.admin);
-            });
-        }
-        else if (msgJson.type == "ConfbridgeJoin") {
-            msgJson.channels.forEach(function (chan) {
-                var found = false;
-                session.data.ConfbridgeChannels.forEach(function (existingChan) {
-                    if (existingChan.id == chan.id) found = true;
-                });
-                if (!found) {
-                    session.data.ConfbridgeChannels.push(chan);
-                    session.data.ConfbridgeEvents.push({ event: chan.caller.name + " (" + chan.caller.number + ") joined the ujCollab", eventTime: utcDateNow() });
-                    console.log(chan.caller.name, "Joined the ujCollab. Muted: ", chan.muted);
-                }
-            });
-        }
-        else if (msgJson.type == "ConfbridgeLeave") {
-            msgJson.channels.forEach(function (chan) {
-                session.data.ConfbridgeChannels.forEach(function (existingChan, i) {
-                    if (existingChan.id == chan.id) {
-                        session.data.ConfbridgeChannels.splice(i, 1);
-                        console.log(chan.caller.name, "Left the ujCollab");
-                        session.data.ConfbridgeEvents.push({ event: chan.caller.name + " (" + chan.caller.number + ") left the ujCollab", eventTime: utcDateNow() });
-                    }
-                });
-            });
-        }
-        else if (msgJson.type == "ConfbridgeMute") {
-            msgJson.channels.forEach(function (chan) {
-                session.data.ConfbridgeChannels.forEach(function (existingChan) {
-                    if (existingChan.id == chan.id) {
-                        console.log(existingChan.caller.name, "is now muted");
-                        existingChan.muted = true;
-                    }
-                });
-            });
-        }
-        else if (msgJson.type == "ConfbridgeUnmute") {
-            msgJson.channels.forEach(function (chan) {
-                session.data.ConfbridgeChannels.forEach(function (existingChan) {
-                    if (existingChan.id == chan.id) {
-                        console.log(existingChan.caller.name, "is now unmuted");
-                        existingChan.muted = false;
-                    }
-                });
-            });
-        }
-        else if (msgJson.type == "ConfbridgeEnd") {
-            console.log("The ujApp ujCollab has ended, bye!");
-        }
-        else {
-            console.warn("Unknown ujApp ujCollab Event:", msgJson.type, msgJson);
-        }
-        RefreshLineActivity(lineObj.LineNumber);
-        response.accept();
-    }
-    else if (messageType.indexOf("application/x-myphone-confbridge-chat") > -1) {
-        console.log("x-myphone-confbridge-chat", response);
-
-
-        response.accept();
-    }
-    else {
-        console.warn("Unknown message type")
-        response.reject();
-    }
-}
-
 function onSessionDescriptionHandlerCreated(lineObj, sdh, provisional) {
     if (sdh) {
         if (sdh.peerConnection) {
@@ -1574,31 +1185,6 @@ function SubscribeAll() {
     }
     userAgent.BlfSubs = [];
 }
-function SelfSubscribe() {
-    if (!userAgent.isRegistered()) return;
-
-    if (userAgent.selfSub) {
-        console.log("Unsubscribe from old self subscribe...");
-        SelfUnsubscribe();
-    }
-
-    var targetURI = SIP.UserAgent.makeURI("sip:" + SipUsername + "@" + SipDomain);
-
-    var options = {
-    }
-    var SubscribeEvent;
-
-    userAgent.selfSub = new SIP.Subscriber(userAgent, targetURI, SubscribeEvent, options);
-    userAgent.selfSub.delegate = {
-        onNotify: function (sip) {
-            // ReceiveNotify(sip, true);
-        }
-    }
-    console.log("SUBSCRIBE Self: " + SipUsername + "@" + SipDomain);
-    userAgent.selfSub.subscribe().catch(function (error) {
-        console.warn("Error subscribing to yourself:", error);
-    });
-}
 
 function SubscribeVoicemail() {
     if (!userAgent.isRegistered()) return;
@@ -1655,26 +1241,7 @@ function UnsubscribeVoicemail() {
     }
     userAgent.voicemailSub = null;
 }
-function SelfUnsubscribe() {
-    if (!userAgent.isRegistered()) return;
-
-    if (userAgent.selfSub) {
-        console.log("Unsubscribe from yourself...", userAgent.selfSub.state);
-        if (userAgent.selfSub.state == SIP.SubscriptionState.Subscribed) {
-            userAgent.selfSub.unsubscribe().catch(function (error) {
-                console.warn("Error self subscription:", error);
-            });
-        }
-        userAgent.selfSub.dispose().catch(function (error) {
-            console.warn("Error disposing self subscription:", error);
-        });
-    } else {
-        console.log("Not subscribed to Yourself");
-    }
-    userAgent.selfSub = null;
-}
-
-
+//#endregion
 
 //#region Outbound Calling
 // ================
@@ -1807,7 +1374,7 @@ function AudioCall(lineObj, dialledNumber, extraHeaders) {
             onSessionReceivedBye(lineObj, sip);
         },
         onMessage: function (sip) {
-            onSessionReceivedMessage(lineObj, sip);
+            // onSessionReceivedMessage(lineObj, sip);
         },
         onInvite: function (sip) {
             onSessionReinvited(lineObj, sip);
@@ -1844,59 +1411,6 @@ function AudioCall(lineObj, dialledNumber, extraHeaders) {
     $(document).trigger("uj_Outbound_initiated", lineObj)
 }
 //#endregion
-
-//#region Sessions & During Call Activity
-// ===============================
-function getSession() {
-    if (userAgent == null) {
-        console.warn("userAgent is null");
-        return null;
-    }
-    if (userAgent.isRegistered() == false) {
-        console.warn("userAgent is not registered");
-        return null;
-    }
-    return rtnSession;
-}
-function countSessions(id) {
-    var rtn = 0;
-    if (userAgent == null) {
-        console.warn("userAgent is null");
-        return 0;
-    }
-    $.each(userAgent.sessions, function (i, session) {
-        if (id != session.id) rtn++;
-    });
-    return rtn;
-}
-
-//#endregion
-
-// Stream Manipulations
-// ====================
-function MixAudioStreams(MultiAudioTackStream) {
-    // Takes in a MediaStream with any number of audio tracks and mixes them together
-
-    var audioContext = null;
-    try {
-        window.AudioContext = window.AudioContext || window.webkitAudioContext;
-        audioContext = new AudioContext();
-    }
-    catch (e) {
-        console.warn("AudioContext() not available, cannot record");
-        return MultiAudioTackStream;
-    }
-    var mixedAudioStream = audioContext.createMediaStreamDestination();
-    MultiAudioTackStream.getAudioTracks().forEach(function (audioTrack) {
-        var srcStream = new MediaStream();
-        srcStream.addTrack(audioTrack);
-        var streamSourceNode = audioContext.createMediaStreamSource(srcStream);
-        streamSourceNode.connect(mixedAudioStream);
-    });
-
-    return mixedAudioStream.stream;
-}
-
 
 
 //#region Call Transfer
@@ -2360,7 +1874,19 @@ function AttendedTransfer(lineNum) {
 //#region In-Session Call Functionality
 // =============================
 
-function holdSession(lineNum) {
+function countSessions(id) {
+    var rtn = 0;
+    if (userAgent == null) {
+        console.warn("userAgent is null");
+        return 0;
+    }
+    $.each(userAgent.sessions, function (i, session) {
+        if (id != session.id) rtn++;
+    });
+    return rtn;
+}
+
+export function holdSession(lineNum) {
     lineNum = lineNum || _selectedLine;
     var lineObj = FindLineByNumber(lineNum);
     if (lineObj == null || lineObj.SipSession == null) return;
@@ -2424,7 +1950,7 @@ function holdSession(lineNum) {
         console.warn("Error attempting to put the call on hold:", error);
     });
 }
-function unholdSession(lineNum) {
+export function unholdSession(lineNum) {
     lineNum = lineNum || _selectedLine;
     var lineObj = FindLineByNumber(lineNum);
     if (lineObj == null || lineObj.SipSession == null) return;
@@ -2489,7 +2015,7 @@ function unholdSession(lineNum) {
         console.warn("Error attempting to take to call off hold", error);
     });
 }
-function SpeakerOffSession(lineNum) {
+export function SpeakerOffSession(lineNum) {
     lineNum = lineNum || _selectedLine;
     var lineObj = FindLineByNumber(lineNum);
     if (lineObj == null || lineObj.SipSession == null) return;
@@ -2514,7 +2040,7 @@ function SpeakerOffSession(lineNum) {
     $(document).trigger("uj_on_modify", ["speakerOff", lineObj]);
 }
 
-function SpeakerOnSession(lineNum) {
+export function SpeakerOnSession(lineNum) {
     lineNum = lineNum || _selectedLine;
     var lineObj = FindLineByNumber(lineNum);
     if (lineObj == null || lineObj.SipSession == null) return;
@@ -2539,7 +2065,7 @@ function SpeakerOnSession(lineNum) {
     $(document).trigger("uj_on_modify", ["speakerOn", lineObj]);
 }
 
-function MuteSession(lineNum) {
+export function MuteSession(lineNum) {
     lineNum = lineNum || _selectedLine;
     var lineObj = FindLineByNumber(lineNum);
     if (lineObj == null || lineObj.SipSession == null) return;
@@ -2570,7 +2096,7 @@ function MuteSession(lineNum) {
     $(document).trigger("uj_on_modify", ["mute", lineObj]);
 
 }
-function UnmuteSession(lineNum) {
+export function UnmuteSession(lineNum) {
     lineNum = lineNum || _selectedLine;
     var lineObj = FindLineByNumber(lineNum);
     if (lineObj == null || lineObj.SipSession == null) return;
@@ -2602,7 +2128,7 @@ function UnmuteSession(lineNum) {
     // Custom Web hook
     $(document).trigger("uj_on_modify", ["unmute", lineObj]);
 }
-function endSession(lineNum) {
+export function endSession(lineNum) {
     lineNum = lineNum || _selectedLine;
     var lineObj = FindLineByNumber(lineNum);
     if (lineObj == null || lineObj.SipSession == null) return;
@@ -2638,9 +2164,12 @@ function endSession(lineNum) {
 
 }
 
-
-
-function sendDTMF(lineNum, itemStr) {
+/**
+ * Primary method for sending DTMF. 
+ * @param {number} lineNum (optional) Line number.
+ * @param {number} itemStr (required) The number to send as DTMF.
+ */
+export function sendDTMF(lineNum, itemStr) {
     lineNum = lineNum || _selectedLine;
     var lineObj = FindLineByNumber(lineNum);
     if (lineObj == null || lineObj.SipSession == null) return;
@@ -2697,208 +2226,10 @@ function sendDTMF(lineNum, itemStr) {
     }
 }
 
-
-function ShowCallTimeline(lineNum) {
-    console.log("Show Timeline");
-    RestoreCallControls(lineNum)
-
-    if ($("#line-AudioStats").is(":visible")) {
-        // The AudioStats is open, they can't take the same space
-        HideCallStats(lineNum)
-    }
-
-    $("#line-CallDetails").show();
-
-    $("#line-btn-ShowTimeline").hide();
-    $("#line-btn-HideTimeline").show();
-}
-function HideCallTimeline(lineNum) {
-    console.log("Hide Timeline");
-
-    $("#line-CallDetails").hide();
-
-    $("#line-btn-ShowTimeline").show();
-    $("#line-btn-HideTimeline").hide();
-}
-function ShowCallStats(lineNum) {
-    console.log("Show Call Stats");
-    RestoreCallControls(lineNum)
-
-    if ($("#line-CallDetails").is(":visible")) {
-        // The Timeline is open, they can't take the same space
-        HideCallTimeline(lineNum)
-    }
-    $("#line-AudioStats").show();
-
-    $("#line-btn-ShowCallStats").hide();
-    $("#line-btn-HideCallStats").show();
-}
-function HideCallStats(lineNum) {
-    console.log("Hide Call Stats");
-
-    $("#line-AudioStats").hide();
-
-    $("#line-btn-ShowCallStats").show();
-    $("#line-btn-HideCallStats").hide();
-}
-function ToggleMoreButtons(lineNum) {
-    if ($("#line-btn-more").is(":visible")) {
-        // The more buttons are showing, drop them down
-        RestoreCallControls(lineNum);
-    } else {
-        ExpandCallControls(lineNum);
-    }
-}
-function ExpandCallControls(lineNum) {
-    $("#line-btn-more").show(200);
-    $("#line-btn-ControlToggle").html('<i class=\"fa fa-chevron-down\"></i>');
-}
-function RestoreCallControls(lineNum) {
-    $("#line-btn-more").hide(200);
-    $("#line-btn-ControlToggle").html('<i class=\"fa fa-chevron-up\"></i>');
-}
-
-
 //#endregion
 
 //#region Phone Lines
 // ===========
-var Line = function (lineNumber, displayName, displayNumber) {
-    this.LineNumber = lineNumber;
-    this.DisplayName = displayName;
-    this.DisplayNumber = displayNumber;
-    this.IsSelected = false;
-    this.SipSession = null;
-}
-function ShowDial() {
-    CloseUpSettings();
-}
-function handleDialInput(obj, event) {
-    if (EnableAlphanumericDial) {
-        $("#dialText").val($("#dialText").val().replace(/[^\da-zA-Z\*\#\+]/g, "").substring(0, MaxDidLength));
-    }
-    else {
-        $("#dialText").val($("#dialText").val().replace(/[^\d\*\#\+]/g, "").substring(0, MaxDidLength));
-    }
-    if ($("#dialText").val().length > 0) {
-        //$("#dialText").css("width", "138px");
-        $("#dialDeleteKey").show();
-    } else {
-        //$("#dialText").css("width", "170px");
-        $("#dialDeleteKey").hide();
-    }
-}
-function dialOnkeydown(event, obj) {
-    var keycode = (event.keyCode ? event.keyCode : event.which);
-    if (keycode == '13') {
-        event.preventDefault();
-        DialByLine();
-
-        return false;
-    }
-}
-function KeyPress(num) {
-    var currVal = $("#dialText").val();
-    var textElObj = $("#dialText").get(0);
-    var ss = textElObj.selectionStart;
-    var se = textElObj.selectionEnd;
-    var ln = currVal.length;
-
-    var newValue = "";
-    if (ss == se) {
-        // Cursor is in a spot with no selection
-        if (num == "del") {
-            newValue = currVal.substring(0, ss - 1) + currVal.substring(se, ln);
-        } else {
-            newValue = currVal.substring(0, ss) + num + currVal.substring(se, ln);
-        }
-        $("#dialText").val(newValue.substring(0, MaxDidLength));
-        $("#dialText").focus();
-        if (num == "del") {
-            textElObj.setSelectionRange(ss - 1, ss - 1);
-        } else {
-            textElObj.setSelectionRange(ss + 1, ss + 1);
-        }
-    } else {
-        if (num == "del") {
-            newValue = currVal.substring(0, ss) + currVal.substring(se, ln);
-        } else {
-            newValue = currVal.substring(0, ss) + num + currVal.substring(se, ln);
-        }
-        $("#dialText").val(newValue.substring(0, MaxDidLength));
-        $("#dialText").focus();
-        if (num == "del") {
-            textElObj.setSelectionRange(ss, ss);
-        } else {
-            textElObj.setSelectionRange(ss + 1, ss + 1);
-        }
-    }
-
-    if ($("#dialText").val().length > 0) {
-        $("#dialText").css("width", "138px");
-        $("#dialDeleteKey").show();
-    } else {
-        $("#dialText").css("width", "170px");
-        $("#dialDeleteKey").hide();
-    }
-}
-function CloseUpSettings() {
-    // Microphone Preview
-    try {
-        settingsMicrophoneStreamTrack.stop();
-        console.log("settingsMicrophoneStreamTrack... stopped");
-    }
-    catch (e) { }
-    settingsMicrophoneStream = null;
-
-
-    // Speaker Preview
-    try {
-        window.SettingsOutputAudio.pause();
-    }
-    catch (e) { }
-    window.SettingsOutputAudio = null;
-
-    try {
-        var tracks = window.SettingsOutputStream.getTracks();
-        tracks.forEach(function (track) {
-            track.stop();
-        });
-    }
-    catch (e) { }
-    window.SettingsOutputStream = null;
-
-    window.SettingsOutputStreamMeter = null;
-
-    // Ringer Preview
-    try {
-        window.SettingsRingerAudio.pause();
-    }
-    catch (e) { }
-    window.SettingsRingerAudio = null;
-
-    try {
-        var tracks = window.SettingsRingerStream.getTracks();
-        tracks.forEach(function (track) {
-            track.stop();
-        });
-    }
-    catch (e) { }
-    window.SettingsRingerStream = null;
-
-    window.SettingsRingerStreamMeter = null;
-}
-function ShowContacts() {
-
-    CloseUpSettings()
-
-    $("#actionArea").hide();
-    $("#actionArea").empty();
-    $("#myContacts").show();
-    $("#searchArea").show();
-}
-//#endregion
-
 
 /**
  * Primary method for making a call. 
@@ -2906,7 +2237,7 @@ function ShowContacts() {
  * @param {sting} numToDial (required) The number to dial.
  * @param {Array<string>} extraHeaders = (optional) Array of headers to include in the INVITE eg: ["foo: bar"] (Note the space after the :)
  */
-function DialByLine(displayName, numToDial, extraHeaders) {
+export function DialByLine(displayName, numToDial, extraHeaders) {
 
     var numDial = (numToDial) ? numToDial : $("#dialText").val();
     if (EnableAlphanumericDial) {
@@ -2975,188 +2306,20 @@ function SwitchLines(lineNum) {
     }
     _selectedLine = lineNum;
 
-    RefreshLineActivity(lineNum);
-}
-function RefreshLineActivity(lineNum) {
-    var lineObj = FindLineByNumber(lineNum);
-    if (lineObj == null || lineObj.SipSession == null) {
-        return;
-    }
-    var session = lineObj.SipSession;
-
-    var callDetails = [];
-
-    var ringTime = 0;
-    var CallStart = moment.utc(session.data.callstart.replace(" UTC", ""));
-    var CallAnswer = null;
-    if (session.data.startTime) {
-        CallAnswer = moment.utc(session.data.startTime);
-        ringTime = moment.duration(CallAnswer.diff(CallStart));
-    }
-    CallStart = CallStart.format("YYYY-MM-DD HH:mm:ss UTC")
-    CallAnswer = (CallAnswer) ? CallAnswer.format("YYYY-MM-DD HH:mm:ss UTC") : null,
-        ringTime = (ringTime != 0) ? ringTime.asSeconds() : 0
-
-    var srcCallerID = "";
-    var dstCallerID = "";
-    if (session.data.calldirection == "inbound") {
-        srcCallerID = "<" + session.remoteIdentity.uri.user + "> " + session.remoteIdentity.displayName;
-    }
-    else if (session.data.calldirection == "outbound") {
-        dstCallerID = session.data.dst;
-    }
-
-    var startCallMessage = (session.data.calldirection == "inbound") ? lang.you_received_a_call_from + " " + srcCallerID  : lang.you_made_a_call_to + " " + dstCallerID ;
-    callDetails.push({
-        Message: startCallMessage,
-        TimeStr: CallStart
-    });
-    if (CallAnswer) {
-        var answerCallMessage = (session.data.calldirection == "inbound") ? lang.you_answered_after + " " + ringTime + " " + lang.seconds_plural : lang.they_answered_after + " " + ringTime + " " + lang.seconds_plural;
-        callDetails.push({
-            Message: answerCallMessage,
-            TimeStr: CallAnswer
-        });
-    }
-
-    var Transfers = (session.data.transfer) ? session.data.transfer : [];
-    $.each(Transfers, function (item, transfer) {
-        var msg = (transfer.type == "Blind") ? lang.you_started_a_blind_transfer_to + " " + transfer.to + ". " : lang.you_started_an_attended_transfer_to + " " + transfer.to + ". ";
-        if (transfer.accept && transfer.accept.complete == true) {
-            msg += lang.the_call_was_completed
-        }
-        else if (transfer.accept.disposition != "") {
-            msg += lang.the_call_was_not_completed + " (" + transfer.accept.disposition + ")"
-        }
-        callDetails.push({
-            Message: msg,
-            TimeStr: transfer.transferTime
-        });
-    });
-    var Mutes = (session.data.mute) ? session.data.mute : []
-    $.each(Mutes, function (item, mute) {
-        callDetails.push({
-            Message: (mute.event == "mute") ? lang.you_put_the_call_on_mute : lang.you_took_the_call_off_mute,
-            TimeStr: mute.eventTime
-        });
-    });
-    var Holds = (session.data.hold) ? session.data.hold : []
-    $.each(Holds, function (item, hold) {
-        callDetails.push({
-            Message: (hold.event == "hold") ? lang.you_put_the_call_on_hold : lang.you_took_the_call_off_hold,
-            TimeStr: hold.eventTime
-        });
-    });
-    var ConfbridgeEvents = (session.data.ConfbridgeEvents) ? session.data.ConfbridgeEvents : []
-    $.each(ConfbridgeEvents, function (item, event) {
-        callDetails.push({
-            Message: event.event,
-            TimeStr: event.eventTime
-        });
-    });
-    var Recordings = (session.data.recordings) ? session.data.recordings : []
-    $.each(Recordings, function (item, recording) {
-        var msg = lang.call_is_being_recorded;
-        if (recording.startTime != recording.stopTime) {
-            msg += "(" + lang.now_stopped + ")"
-        }
-        callDetails.push({
-            Message: msg,
-            TimeStr: recording.startTime
-        });
-    });
-    var ConfCalls = (session.data.confcalls) ? session.data.confcalls : []
-    $.each(ConfCalls, function (item, confCall) {
-        var msg = lang.you_started_a_ujCollab_call_to + " " + confCall.to + ". ";
-        if (confCall.accept && confCall.accept.complete == true) {
-            msg += lang.the_call_was_completed
-        }
-        else if (confCall.accept.disposition != "") {
-            msg += lang.the_call_was_not_completed + " (" + confCall.accept.disposition + ")"
-        }
-        callDetails.push({
-            Message: msg,
-            TimeStr: confCall.startTime
-        });
-    });
-
-    callDetails.sort(function (a, b) {
-        var aMo = moment.utc(a.TimeStr.replace(" UTC", ""));
-        var bMo = moment.utc(b.TimeStr.replace(" UTC", ""));
-        if (aMo.isSameOrAfter(bMo, "second")) {
-            return -1;
-        } else return 1;
-        return 0;
-    });
-
-    $(document).trigger("uj_refresh_CallActivity", callDetails);
 }
 
-function DeleteCallRecordings(stream) {
-    if (CallRecordingsIndexDb != null) {
-        // Loop and Delete
-        // Note: This database can only delete based on Primary Key
-        // The Primary Key is arbitrary, but is saved in item.Recordings.uID
-        $.each(stream.DataCollection, function (i, item) {
-            if (item.ItemType == "CDR" && item.Recordings && item.Recordings.length) {
-                $.each(item.Recordings, function (i, recording) {
-                    console.log("Deleting Call Recording: ", recording.uID);
-                    var objectStore = CallRecordingsIndexDb.transaction(["Recordings"], "readwrite").objectStore("Recordings");
-                    try {
-                        var deleteRequest = objectStore.delete(recording.uID);
-                        deleteRequest.onsuccess = function (event) {
-                            console.log("Call Recording Deleted: ", recording.uID);
-                        }
-                    } catch (e) {
-                        console.log("Call Recording Delete failed: ", e);
-                    }
-                });
-            }
-        });
-    }
-    else {
-        console.warn("CallRecordingsIndexDb is null.");
-    }
-}
-function ToggleExtraButtons(lineNum, normal, expanded) {
-    var extraButtons = $("#contact-extra-buttons");
-    if (extraButtons.is(":visible")) {
-        // Restore
-        extraButtons.hide()
-        $("#contact-action-buttons").css("width", normal + "px");
-    } else {
-        // Expand
-        extraButtons.show()
-        $("#contact-action-buttons").css("width", expanded + "px");
-    }
-}
-function ShowChatMenu(obj) {
-    $(obj).children("span").show();
-}
-function HideChatMenu(obj) {
-    $(obj).children("span").hide();
-}
-function ExpandMessage(obj, ItemId) {
-    $("#msg-text-" + ItemId).css("max-height", "");
-    $("#msg-text-" + ItemId).css("overflow", "");
-    $("#msg-readmore-" + ItemId).remove();
-
-}
 //#endregion
 
-
-// Device Detection
+//#region Device Detection
 // ================
 function DetectDevices() {
     navigator.mediaDevices.enumerateDevices().then(function (deviceInfos) {
         // deviceInfos will not have a populated lable unless to accept the permission
         // during getUserMedia. This normally happens at startup/setup
         // so from then on these devices will be with lables.
-        HasVideoDevice = false;
         HasAudioDevice = false;
         HasSpeakerDevice = false; // Safari and Firefox don't have these
         AudioinputDevices = [];
-        VideoinputDevices = [];
         SpeakerDevices = [];
         for (var i = 0; i < deviceInfos.length; ++i) {
             if (deviceInfos[i].kind === "audioinput") {
@@ -3461,13 +2624,12 @@ let codes = {
     "503": "Calling Network is down or overloaded",
     "504": "Calling Network is not Responding",
 }
-
+//#endregion
 
 // #region Handle UI
 
-function addNumber2(digit) {
-    const input = document.getElementById('dialText');
-    input.value += digit;
+function Alert(msg){
+    message.info(msg);
 }
 
 function web_hook_on_register() {
@@ -3549,8 +2711,8 @@ function RegisterEvents() {
             $(".uj-divInCallContainer").hide();
             $(".uj-DivAnswerCall").hide();
             var msg = codes[statusCode] || `Status : ${statusCode} `;
-            $(".uj-notif").text(msg).fadeIn('fast').delay(3000).fadeOut('slow')
-            console.log(" Call Teminated ==== > ", statusCode, msg)
+            message.success(msg);
+            console.log(" Call Teminated ==== > ", statusCode, msg,line)
         }
     });
 
@@ -3591,15 +2753,5 @@ function RegisterEvents() {
     });
 
 }
-function ShowDtmfMenu(show) {
-    if (show) {
-        $(".uj-inCallButtons,.uj-avatar").hide();
-        $(".uj-divDTMFmenu").show();
-        $("#line-btn-HideDTMF").show();
-    } else {
-        $(".uj-inCallButtons,.uj-avatar").show();
-        $(".uj-divDTMFmenu").hide();
-        $("#line-btn-HideDTMF").hide();
-    }
-}
+
 // #endregion

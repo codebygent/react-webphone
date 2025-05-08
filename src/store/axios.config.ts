@@ -27,7 +27,13 @@ api.interceptors.request.use(
 
 // Response interceptor
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if(response.data.success == false && response.data.message == "Unauthorized token" ){
+      useAuthStore.getState().logout();
+    }
+
+    return response;
+  },
   (error) => {
     if (error.response) {
       // Handle 401 unauthorized

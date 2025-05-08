@@ -3,6 +3,8 @@ import axios from 'axios';
 import CryptoJS from 'crypto-js';
 import { User, AuthUser, WebRTCCredential } from '../types/user.types';
 import api from './axios.config';
+import { InitUi } from './uj-phone';
+import { message } from 'antd';
 
 const API_URL = (import.meta as any).env.VITE_API_URL;
 
@@ -41,10 +43,12 @@ const getInitialState = () => {
     webrtcCredentials: null as WebRTCCredential | null,
   };
 
-  if (state.isLoggedIn && state.token && state.user) {
+  if (state.isLoggedIn && state.token) {
     setTimeout(() => {
       useAuthStore.getState().getUserDetails();
-      useAuthStore.getState().webrtcProvisioning(state.user.extensionId);
+      if (state.user) {
+        useAuthStore.getState().webrtcProvisioning(state.user.extensionId);
+      }
     }, 0);
   }
   return state;
@@ -244,15 +248,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         params: { extensionId }
       });
 
-      const data = response.data;
-      if (data.success && data.credential) {
-        set({ webrtcCredentials: data.credential });
-        return { success: true, data: data.credential };
+      const data = response.data.credential;
+      if (data) {
+        set({ webrtcCredentials: data });
+        data.extensionId = extensionId
+        InitUi(data);
+      } else {
+        message.error("WebRTC provisioning error.")
       }
-      return { success: false, message: 'Failed to get WebRTC credentials' };
     } catch (error) {
       console.error('WebRTC provisioning error:', error);
-      return { success: false, message: 'Server Error' };
     }
   },
 }));

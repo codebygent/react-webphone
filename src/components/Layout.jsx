@@ -3,6 +3,8 @@ import UserMenu from './UserMenu';
 import { NavLink } from 'react-router-dom';
 import { Card } from 'antd';
 import * as phone from '../store/uj-phone';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faKeyboard, faListAlt, faHistory, faUsers } from '@fortawesome/free-solid-svg-icons';
 
 export default function Layout() {
   return (
@@ -20,36 +22,36 @@ export default function Layout() {
                   <li>
                     <NavLink
                       to="/phone"
-                      className={({ isActive }) => `flex flex-col items-center ${isActive ? 'text-primary' : 'text-gray-500'}`}
+                      className={({ isActive }) => `flex flex-col items-center ${isActive ? 'text-secondary' : ''}`}
                     >
-                      <i className="fa fa-keyboard-o text-xl mb-1"></i>
+                      <FontAwesomeIcon icon={faKeyboard} className="text-xl mb-1" />
                       <span className="text-xs">Keypad</span>
                     </NavLink>
                   </li>
                   <li>
                     <NavLink
                       to="/todo"
-                      className={({ isActive }) => `flex flex-col items-center ${isActive ? 'text-primary' : 'text-gray-500'}`}
+                      className={({ isActive }) => `flex flex-col items-center ${isActive ? 'text-secondary' : ''}`}
                     >
-                      <i className="fa fa-list-alt text-xl mb-1"></i>
+                      <FontAwesomeIcon icon={faListAlt} className="text-xl mb-1" />
                       <span className="text-xs">Todo</span>
                     </NavLink>
                   </li>
                   <li>
                     <NavLink
                       to="/history"
-                      className={({ isActive }) => `flex flex-col items-center ${isActive ? 'text-primary' : 'text-gray-500'}`}
+                      className={({ isActive }) => `flex flex-col items-center ${isActive ? 'text-secondary' : ''}`}
                     >
-                      <i className="fa fa-history text-xl mb-1"></i>
+                      <FontAwesomeIcon icon={faHistory} className="text-xl mb-1" />
                       <span className="text-xs">History</span>
                     </NavLink>
                   </li>
                   <li>
                     <NavLink
                       to="/people"
-                      className={({ isActive }) => `flex flex-col items-center ${isActive ? 'text-primary' : 'text-gray-500'}`}
+                      className={({ isActive }) => `flex flex-col items-center ${isActive ? 'text-secondary' : ''}`}
                     >
-                      <i className="fa fa-users text-xl mb-1"></i>
+                      <FontAwesomeIcon icon={faUsers} className="text-xl mb-1" />
                       <span className="text-xs">People</span>
                     </NavLink>
                   </li>

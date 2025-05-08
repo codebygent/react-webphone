@@ -2,7 +2,7 @@ import $ from 'jquery';
 import * as SIP from 'sip.js';
 import moment from 'moment';
 import { Line } from '../types/line.types';
-import {message} from 'antd'
+import { message } from 'antd'
 //#region Global Settings
 // ===============
 const appversion = "0.3.29";
@@ -113,53 +113,12 @@ function formatShortDuration(seconds) {
 }
 //#endregion
 
-//#region Window and Document Events
-// ==========================
-$(window).on("beforeunload", function (event) {
-    var CurrentCalls = countSessions("0");
-    if (CurrentCalls > 0) {
-        console.warn("Warning, you have current calls open");
-        event.preventDefault();
-        return (event.returnValue = "You have ongoing calls. Are you sure you want to leave?");
-    }
-    Unregister(true);
-});
-
-$(window).on("unload", function () {
-    if (countSessions("0") > 0) {
-        endSession();
-    }
-});
-
-$(window).on("offline", function () {
-    console.warn('Offline!');
-
-    $("#regStatus").html(lang.disconnected_from_web_socket);
-    $("#WebRtcFailed").show();
-
-    // If there is an issue with the WS connection
-    // We unregister, so that we register again once its up
-    console.log("Disconnect Transport...");
-    try {
-        // userAgent.registerer.unregister();
-        userAgent.transport.disconnect();
-    } catch (e) {
-        // I know!!!
-    }
-});
-$(window).on("online", function () {
-    console.log('Online!');
-    ReconnectTransport();
-});
-
-//#endregion
-
 
 // #region Init UI
 // =======
 
 export function InitUi(data) {
-    
+
     profileName = data.userDisplayName;
     wssServer = data.wsDomain;
     SipDomain = data.sipDomain;
@@ -1045,7 +1004,7 @@ function onSessionReceivedBye(lineObj, response) {
     teardownSession(lineObj);
 }
 function onSessionReinvited(lineObj, response) {
-    
+
 }
 function onSessionDescriptionHandlerCreated(lineObj, sdh, provisional) {
     if (sdh) {
@@ -1345,8 +1304,8 @@ function AudioCall(lineObj, dialledNumber, extraHeaders) {
     lineObj.SipSession.data.withvideo = false;
     lineObj.SipSession.data.earlyReject = false;
     lineObj.SipSession.isOnHold = false;
-    
-    
+
+
     try {
         var ringer = new Audio(audioBlobs.CallWaiting.blob);
         ringer.preload = "auto";
@@ -2628,8 +2587,8 @@ let codes = {
 
 // #region Handle UI
 
-function Alert(msg){
-    message.info(msg);
+function Alert(msg) {
+    console.log(msg);
 }
 
 function web_hook_on_register() {
@@ -2681,10 +2640,10 @@ function CallInitiated(t, session) {
 
     // Buttons 
 
-    if(decodeURIComponent(session.DisplayNumber).indexOf("555#")==0){
+    if (decodeURIComponent(session.DisplayNumber).indexOf("555#") == 0) {
         $("#line-btn-ShowDtmf").hide();
         $("#line-btn-Transfer").hide();
-    }else{
+    } else {
         $("#line-btn-ShowDtmf").show();
         $("#line-btn-Transfer").show();
     }
@@ -2702,6 +2661,12 @@ function CallInitiated(t, session) {
 }
 
 function RegisterEvents() {
+    // Remove existing document events
+    $(document).off("uj_terminate");
+    $(document).off("uj_Outbound_initiated");
+    $(document).off("uj_refresh_CallActivity");
+    $(document).off("uj_on_modify");
+
 
     $(document).on("uj_terminate", function (event, line) {
         if (_selectedLine == line.LineNumber || line.IsSelected == false) {
@@ -2711,8 +2676,8 @@ function RegisterEvents() {
             $(".uj-divInCallContainer").hide();
             $(".uj-DivAnswerCall").hide();
             var msg = codes[statusCode] || `Status : ${statusCode} `;
-            message.success(msg);
-            console.log(" Call Teminated ==== > ", statusCode, msg,line)
+            message.error(msg);
+            console.log(" Call Teminated ==== > ", statusCode, msg, line)
         }
     });
 
@@ -2733,7 +2698,7 @@ function RegisterEvents() {
 
         }
         if (action == "accepted") {
-            CallInitiated('in',session)
+            CallInitiated('in', session)
         }
         if (action == "trying") {
 
@@ -2751,6 +2716,55 @@ function RegisterEvents() {
 
         }
     });
+
+    //#region Window and Document Events
+    // ==========================
+
+    // Remove existing window events
+    $(window).off("beforeunload");
+    $(window).off("unload");
+    $(window).off("offline");
+    $(window).off("online");
+
+    $(window).on("beforeunload", function (event) {
+        var CurrentCalls = countSessions("0");
+        if (CurrentCalls > 0) {
+            console.warn("Warning, you have current calls open");
+            event.preventDefault();
+            return (event.returnValue = "You have ongoing calls. Are you sure you want to leave?");
+        }
+        Unregister(true);
+    });
+
+    $(window).on("unload", function () {
+        if (countSessions("0") > 0) {
+            endSession();
+        }
+    });
+
+    $(window).on("offline", function () {
+        console.warn('Offline!');
+
+        $("#regStatus").html(lang.disconnected_from_web_socket);
+        $("#WebRtcFailed").show();
+
+        // If there is an issue with the WS connection
+        // We unregister, so that we register again once its up
+        console.log("Disconnect Transport...");
+        try {
+            // userAgent.registerer.unregister();
+            userAgent.transport.disconnect();
+        } catch (e) {
+            // I know!!!
+        }
+    });
+    $(window).on("online", function () {
+        console.log('Online!');
+        ReconnectTransport();
+    });
+
+    //#endregion
+
 
 }
 

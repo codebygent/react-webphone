@@ -22,6 +22,7 @@ interface AuthState {
   logout: () => void;
   getUserDetails: () => Promise<any>;
   webrtcProvisioning: (extensionId: string) => Promise<any>;
+  initializeUserServices: () => Promise<void>;
 }
 
 const objectToFormData = (obj: Record<string, string>) => {
@@ -45,16 +46,29 @@ const getInitialState = () => {
 
   if (state.isLoggedIn && state.token) {
     setTimeout(() => {
-      useAuthStore.getState().getUserDetails();
-      if (state.user) {
-        useAuthStore.getState().webrtcProvisioning(state.user.extensionId);
-      }
+      useAuthStore.getState().initializeUserServices();
     }, 0);
   }
   return state;
 };
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   ...getInitialState(),
+
+  
+  initializeUserServices: async () => {
+    try {
+      const { user } = get();
+      await get().getUserDetails();
+      
+      if (user?.extensionId) {
+        await get().webrtcProvisioning(user.extensionId);
+      }
+    } catch (error) {
+      console.error('Failed to initialize user services:', error);
+      message.error('Failed to initialize user services');
+    }
+  },
 
   checkEmailPreLogin: async (email: string) => {
     try {
@@ -117,7 +131,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(userData));
         localStorage.setItem('isLoggedIn', 'true');
-        get().getUserDetails();
+        await get().initializeUserServices();
         return { success: true };
       } else {
         return { success: false, message: data.message };
@@ -188,7 +202,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(userData));
         localStorage.setItem('isLoggedIn', 'true');
-        get().getUserDetails();
+        await get().initializeUserServices();
         return { success: true };
       } else {
         return { success: false, message: data.message };

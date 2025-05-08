@@ -3,10 +3,20 @@
 :root {
   --ksk-green: #7DBAAB;
   --ksk-pink: #E6007E;
+  --ksk-pink-light: #e760ab;
   --ksk-purple: #5C0F8B;
   --ksk-grey: #54565A;
 }
 .ant-card.jz-card .ant-card-body{
   padding: 0px;
+  background: linear-gradient(to bottom, var(--ksk-green), white);
 }
 
+li a.flex{
+  color: var(--ksk-pink-light);
+}
+
+
+li a.flex.text-secondary{
+  color: var(--ksk-pink);
+}

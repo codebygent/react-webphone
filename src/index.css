@@ -1,15 +1,23 @@
 @import "tailwindcss";
 
 :root {
+  --ksk-green-light: #b8e4da;
   --ksk-green: #7DBAAB;
   --ksk-pink: #E6007E;
   --ksk-pink-light: #e760ab;
   --ksk-purple: #5C0F8B;
   --ksk-grey: #54565A;
 }
+.main-body{
+  background-color: #232933;
+}
+.main-body .ant-card.jz-card{
+  border-radius: 0px;
+}
 .ant-card.jz-card .ant-card-body{
   padding: 0px;
   background: linear-gradient(to bottom, var(--ksk-green), white);
+  border-radius: 0px;
 }
 
 li a.flex{
@@ -19,4 +27,11 @@ li a.flex{
 
 li a.flex.text-secondary{
   color: var(--ksk-pink);
+}
+
+.bottom-nav{
+  background-color:var(--ksk-green-light) ;
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
 }

@@ -9,29 +9,45 @@
     }
 
     .div-height {
-        height: 450px;
+        min-height: 450px;
         justify-content: space-around;
     }
 
-    .uj-btn p {
-        font-size: 22px;
-        font-weight: 600;
-        line-height: 22px;
-        margin: 0px;
+    .uj-btn-circle {
+        border-radius: 50%;
+        min-width: 60px;
+        height: 60px;
     }
 
-    .uj-btn span {
-        font-size: 11px;
-        line-height: 11px;
-        font-weight: 600;
-    }
-
-    .uj-btn.uj-btn-green {
-        color: var(--ksk-green);
-    }
-
-    .uj-btn.uj-btn-red {
+    .uj-btn-call.uj-btn-red {
         color: var(--ksk-pink);
+
+        i {
+            border: 2px solid var(--ksk-pink);
+        }
+    }
+
+    .uj-btn-call {
+        color: #45494c;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+
+        i {
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 22px;
+            background-color: #dbe5fe;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        span {
+            font-size: 12px;
+        }
     }
 
     .uj-btn {
@@ -47,6 +63,19 @@
         height: 46px;
         cursor: pointer;
         transition: background-color 0.3s ease, color 0.3s ease;
+
+        span {
+            font-size: 11px;
+            line-height: 11px;
+            font-weight: 600;
+        }
+
+        p {
+            font-size: 22px;
+            font-weight: 600;
+            line-height: 22px;
+            margin: 0px;
+        }
     }
 
     .uj-btn:hover {
@@ -64,10 +93,13 @@
     .uj-avatar {
         color: white;
         background-color: #c6b6e9;
-        padding: 20px;
+        height: 100px;
         border-radius: 77%;
-        width: 124px;
+        width: 100px;
         margin: auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 
     .callingDisplayName {

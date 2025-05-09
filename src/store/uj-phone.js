@@ -2,7 +2,9 @@ import $ from 'jquery';
 import * as SIP from 'sip.js';
 import moment from 'moment';
 import { Line } from '../types/line.types';
-import { message } from 'antd'
+import { message } from 'antd';
+import useHistoryStore from './history.store';
+
 //#region Global Settings
 // ===============
 const appversion = "0.3.29";
@@ -546,20 +548,22 @@ function ReceiveCall(session) {
     _newLineNumber = _newLineNumber + 1;
     var lineObj = new Line(_newLineNumber, callerID, did);
     lineObj.SipSession = session;
-    lineObj.SipSession.data = {}
-    lineObj.SipSession.data.line = 1;
-    lineObj.SipSession.data.calldirection = "inbound";
-    lineObj.SipSession.data.terminateby = "";
-    lineObj.SipSession.data.src = did;
-    lineObj.SipSession.data.callstart = startTime.format("YYYY-MM-DD HH:mm:ss UTC");
-    lineObj.SipSession.data.callTimer = window.setInterval(function () {
-        var now = moment.utc();
-        var duration = moment.duration(now.diff(startTime));
-        var timeStr = formatShortDuration(duration.asSeconds());
-        $("#line-timer").html(timeStr);
-        $("#line-datetime").html(timeStr);
-    }, 1000);
-    lineObj.SipSession.data.earlyReject = false;
+    lineObj.SipSession.data = {
+        line: 1,
+        calldirection: "inbound",
+        terminateby: "",
+        src: did,
+        callstart: startTime.format("YYYY-MM-DD HH:mm:ss UTC"),
+        callTimer: window.setInterval(function () {
+            var now = moment.utc();
+            var duration = moment.duration(now.diff(startTime));
+            var timeStr = formatShortDuration(duration.asSeconds());
+            $("#line-timer").html(timeStr);
+            $("#line-datetime").html(timeStr);
+        }, 1000),
+        earlyReject: false,
+        startTime: null
+    };
     Lines.push(lineObj);
     // Session Delegates
     lineObj.SipSession.delegate = {
@@ -1071,6 +1075,24 @@ function teardownSession(lineObj) {
     if (session.data.teardownComplete == true) return;
     session.data.teardownComplete = true; // Run this code only once
 
+    // Add call to history
+    const { addCall } = useHistoryStore.getState();
+    
+    // Calculate duration
+    const duration = session.data.startTime ? 
+        moment.duration(moment.utc().diff(moment.utc(session.data.startTime))).asSeconds() : 0;
+
+    // Add to history store
+    addCall({
+        number: decodeURIComponent(session.data.dst || session.data.src),
+        name: session.DisplayName || 'Unknown',
+        direction: session.data.calldirection,
+        duration: duration,
+        status: determineCallStatus(session),
+        timestamp: moment.utc().format(),
+        recording: session.data.recording || null
+    });
+
     // Call UI
     if (session.data.earlyReject != true) {
     }
@@ -1124,6 +1146,22 @@ function teardownSession(lineObj) {
         RemoveLine(lineObj);
     }, 1000);
 
+}
+
+function determineCallStatus(session) {
+    if (session.data.terminateby === "us") {
+        return "ended";
+    }
+    if (session.data.reasonCode === 486) {
+        return "rejected";
+    }
+    if (session.data.earlyReject) {
+        return "rejected";
+    }
+    if (!session.data.startTime) {
+        return "missed";
+    }
+    return "completed";
 }
 
 //#endregion
@@ -1374,7 +1412,7 @@ function AudioCall(lineObj, dialledNumber, extraHeaders) {
 
 //#region Call Transfer
 // =============
-function StartTransferSession(lineNum) {
+export function StartTransferSession(lineNum) {
     lineNum = lineNum || _selectedLine;
     $("#line-btn-Transfer,#line-btn-ShowDtmf").hide();
     $("#line-btn-CancelTransfer").show();
@@ -1396,7 +1434,7 @@ function StartTransferSession(lineNum) {
 
     $("#line-Transfer").show();
 }
-function CancelTransferSession(lineNum) {
+export function CancelTransferSession(lineNum) {
     lineNum = lineNum || _selectedLine;
     var lineObj = FindLineByNumber(lineNum);
     if (lineObj == null || lineObj.SipSession == null) {
@@ -1426,21 +1464,7 @@ function CancelTransferSession(lineNum) {
 
 
 }
-function transferOnkeydown(event, obj, lineNum) {
-    var keycode = (event.keyCode ? event.keyCode : event.which);
-    if (keycode == '13') {
-        event.preventDefault();
-        if (event.ctrlKey) {
-            AttendedTransfer(lineNum);
-        }
-        else {
-            BlindTransfer(lineNum);
-        }
-
-        return false;
-    }
-}
-function BlindTransfer(lineNum) {
+export function BlindTransfer(lineNum) {
     lineNum = lineNum || _selectedLine;
     var dstNo = $("#line-txt-FindTransfer").val();
     if (EnableAlphanumericDial) {
@@ -1524,7 +1548,7 @@ function BlindTransfer(lineNum) {
 
 
 }
-function AttendedTransfer(lineNum) {
+export function AttendedTransfer(lineNum) {
     lineNum = lineNum || _selectedLine;
     var dstNo = $("#line-txt-FindTransfer").val();
     if (EnableAlphanumericDial) {
@@ -2173,11 +2197,6 @@ export function sendDTMF(lineNum, itemStr) {
             }
 
             $("#line-msg").html(lang.send_dtmf + ": " + itemStr);
-
-
-
-            // Custom Web hook
-            if (typeof web_hook_on_dtmf !== 'undefined') web_hook_on_dtmf(itemStr, lineObj.SipSession);
         }
         else {
             console.warn("Cannot Send DTMF (" + itemStr + "): " + 1 + " session is not establishing or established");
@@ -2768,4 +2787,15 @@ function RegisterEvents() {
 
 }
 
+export function ShowDtmfMenu(show) {
+    if (show) {
+        $(".uj-inCallButtons,.uj-avatar").hide();
+        $(".uj-divDTMFmenu").show();
+        $("#line-btn-HideDTMF").show();
+    } else {
+        $(".uj-inCallButtons,.uj-avatar").show();
+        $(".uj-divDTMFmenu").hide();
+        $("#line-btn-HideDTMF").hide();
+    }
+}
 // #endregion

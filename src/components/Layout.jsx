@@ -2,7 +2,6 @@ import { Outlet } from 'react-router-dom';
 import UserMenu from './UserMenu';
 import { NavLink } from 'react-router-dom';
 import { Card } from 'antd';
-import * as phone from '../store/uj-phone';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faKeyboard, faListAlt, faHistory, faUsers } from '@fortawesome/free-solid-svg-icons';
 
@@ -13,11 +12,14 @@ export default function Layout() {
         <UserMenu />
       </header>
       <main className="flex-1 main-body">
-        <div className="flex items-center justify-center bg-gray-50 min-h-[calc(100vh-100px)]">
-          <Card className="w-full max-w-[400px] shadow-lg rounded-lg relative jz-card">
-            <Outlet />
-            <nav className="border-t border-gray-200 mt-4">
-              <div className="h-[62px]">
+        <div className="flex items-center justify-center min-h-[calc(100vh-100px)]">
+          <Card className="w-full max-w-[350px] shadow-lg rounded-lg relative jz-card">
+            <div className='pb-[56px] min-h-[506px]'>
+              <Outlet />
+            </div>
+
+            <nav className="border-t border-gray-200 mt-4 bottom-nav">
+              <div className="h-[52px]">
                 <ul className="flex items-center justify-around h-full">
                   <li>
                     <NavLink
@@ -59,6 +61,7 @@ export default function Layout() {
               </div>
             </nav>
           </Card>
+
         </div>
       </main>
     </div>

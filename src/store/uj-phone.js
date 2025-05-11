@@ -121,6 +121,7 @@ function formatShortDuration(seconds) {
 
 export function InitUi(data) {
 
+    $("#regStatus").html("Starting connection ....")
     profileName = data.userDisplayName;
     wssServer = data.wsDomain;
     SipDomain = data.sipDomain;
@@ -1090,7 +1091,8 @@ function teardownSession(lineObj) {
         duration: duration,
         status: determineCallStatus(session),
         timestamp: moment.utc().format(),
-        recording: session.data.recording || null
+        recording: session.data.recording || null,
+        status : duration > 0 ? 'answered' : 'missed'
     });
 
     // Call UI

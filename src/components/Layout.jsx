@@ -8,11 +8,9 @@ import { faKeyboard, faListAlt, faHistory, faUsers } from '@fortawesome/free-sol
 export default function Layout() {
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="p-4 flex justify-end">
-        <UserMenu />
-      </header>
+      <UserMenu />
       <main className="flex-1 main-body">
-        <div className="flex items-center justify-center min-h-[calc(100vh-100px)]">
+        <div className="flex items-center justify-center min-h-[100vh]">
           <Card className="w-full max-w-[350px] shadow-lg rounded-lg relative jz-card">
             <div className='pb-[56px] min-h-[506px]'>
               <Outlet />
@@ -30,7 +28,7 @@ export default function Layout() {
                       <span className="text-xs">Keypad</span>
                     </NavLink>
                   </li>
-                  <li>
+                  {/* <li>
                     <NavLink
                       to="/todo"
                       className={({ isActive }) => `flex flex-col items-center ${isActive ? 'text-secondary' : ''}`}
@@ -38,7 +36,7 @@ export default function Layout() {
                       <FontAwesomeIcon icon={faListAlt} className="text-xl mb-1" />
                       <span className="text-xs">Todo</span>
                     </NavLink>
-                  </li>
+                  </li> */}
                   <li>
                     <NavLink
                       to="/history"

@@ -38,7 +38,7 @@ export default function Phone() {
   return (
 
     <div id="uj-webphone-widget" className="uj-webrtc-container" >
-      <h3><b id="regStatus">Starting connection ....</b></h3>
+      <h3><b id="regStatus"></b></h3>
 
 
       <div className="uj-divDialPad">
@@ -64,7 +64,7 @@ export default function Phone() {
             </button>
           </div>
           <DialPad onDigitClick={handleDigitClick} />
-          <div>
+          <div className='mb-4'>
             <button onClick={handleDialByLine} className="uj-btn-circle text-white bg-green-600">
               <FontAwesomeIcon icon={faPhone} size="2x" className="" />
             </button>
@@ -91,7 +91,7 @@ export default function Phone() {
 
           </div>
 
-          <div className="uj-inCallButtons grid grid-cols-3 gap-6 mt-8">
+          <div className="uj-inCallButtons grid grid-cols-3 gap-6 mt-8 mb-8">
             <button id="line-btn-SpeakerOff" onClick={() => UJP.SpeakerOffSession()} className="uj-btn-call" title="Voice Off">
               <i><FontAwesomeIcon icon={faVolumeXmark} /></i>
               <span>Speaker Off</span>
@@ -161,8 +161,10 @@ export default function Phone() {
               <span>Cancel</span>
             </button>
           </div>
-          <div id="line-Transfer" className="uj-line-Transfer hidden">
-            <input type="text" id="line-txt-FindTransfer" name="FindTransfer" className="form-control" />
+          <div id="line-Transfer" className="uj-line-Transfer hidden mb-4">
+            <input type="text" id="line-txt-FindTransfer" name="FindTransfer" 
+            placeholder='Transfer Number'
+            className="text-center font-bold uj-inputnumber" />
             <div className="uj-line-transfer-btn">
               <button id="line-btn-blind-transfer"
                 onClick={() => UJP.BlindTransfer()}

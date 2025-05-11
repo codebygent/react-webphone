@@ -16,7 +16,17 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
-      config.params = { ...config.params, token };
+      // For GET requests, add token to params
+      if (config.method?.toLowerCase() === 'get') {
+        config.params = { ...config.params, token };
+      }
+      // For POST requests, add token to data (payload)
+      else if (config.method?.toLowerCase() === 'post') {
+        config.data = { 
+          ...(typeof config.data === 'object' ? config.data : {}), 
+          token 
+        };
+      }
     }
     return config;
   },

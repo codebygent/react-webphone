@@ -27,7 +27,7 @@ export default function UserMenu() {
   ];
 
   return (
-    <div className="relative">
+    <div className="absolute p-4">
       <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight" arrow>
         <Avatar
           size="large"

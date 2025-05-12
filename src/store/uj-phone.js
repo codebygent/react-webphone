@@ -720,7 +720,7 @@ function ReceiveCall(session) {
     // Custom Web hook
     if (typeof web_hook_on_invite !== 'undefined') web_hook_on_invite(lineObj);
 }
-function AnswerAudioCall(lineNumber) {
+export function AnswerAudioCall(lineNumber) {
     lineNumber = lineNumber || _newLineNumber;
     var lineObj = FindLineByNumber(lineNumber);
     if (lineObj == null) {
@@ -800,7 +800,7 @@ function AnswerAudioCall(lineNumber) {
         teardownSession(lineObj);
     });
 }
-function RejectCall(lineNumber) {
+export function RejectCall(lineNumber) {
     lineNumber = lineNumber || _newLineNumber;
     var lineObj = FindLineByNumber(lineNumber);
     if (lineObj == null) {
@@ -1078,22 +1078,24 @@ function teardownSession(lineObj) {
 
     // Add call to history
     const { addCall } = useHistoryStore.getState();
-    
+
     // Calculate duration
-    const duration = session.data.startTime ? 
+    const duration = session.data.startTime ?
         moment.duration(moment.utc().diff(moment.utc(session.data.startTime))).asSeconds() : 0;
 
     // Add to history store
-    addCall({
+    debugger;
+    const callLog ={
         number: decodeURIComponent(session.data.dst || session.data.src),
-        name: session.DisplayName || 'Unknown',
+        name: lineObj.DisplayName,
         direction: session.data.calldirection,
         duration: duration,
         status: determineCallStatus(session),
         timestamp: moment.utc().format(),
         recording: session.data.recording || null,
-        status : duration > 0 ? 'answered' : 'missed'
-    });
+        status: duration > 0 ? 'Answered' : 'Missed'
+    }
+    addCall(callLog);
 
     // Call UI
     if (session.data.earlyReject != true) {

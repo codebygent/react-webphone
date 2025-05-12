@@ -21,11 +21,13 @@ import {
 import usePhoneStore from '../store/phone.store';
 
 export default function Phone() {
-  const { number: phoneNumber, setNumber: setPhoneNumber } = usePhoneStore();
+  const { number: phoneNumber, setNumber: setPhoneNumber, name, clearNumberName } = usePhoneStore();
 
   const handleDialByLine = () => {
-    if (phoneNumber)
-      UJP.DialByLine("", phoneNumber)
+    if (phoneNumber) {
+      UJP.DialByLine(name, phoneNumber)
+      clearNumberName();
+    }
   };
 
   const handleDigitClick = (digit) => {
@@ -41,7 +43,7 @@ export default function Phone() {
       <h3><b id="regStatus"></b></h3>
 
 
-      <div className="uj-divDialPad">
+      <div className="uj-divDialPad" >
         <div className="flex flex-col items-center div-height">
           <div className='min-h-10'></div>
           <div className='w-full relative'>
@@ -91,7 +93,7 @@ export default function Phone() {
 
           </div>
 
-          <div className="uj-inCallButtons grid grid-cols-3 gap-6 mt-8 mb-8">
+          <div className="uj-inCallButtons grid grid-cols-3 gap-6 mt-4 mb-4">
             <button id="line-btn-SpeakerOff" onClick={() => UJP.SpeakerOffSession()} className="uj-btn-call" title="Voice Off">
               <i><FontAwesomeIcon icon={faVolumeXmark} /></i>
               <span>Speaker Off</span>
@@ -162,9 +164,9 @@ export default function Phone() {
             </button>
           </div>
           <div id="line-Transfer" className="uj-line-Transfer hidden mb-4">
-            <input type="text" id="line-txt-FindTransfer" name="FindTransfer" 
-            placeholder='Transfer Number'
-            className="text-center font-bold uj-inputnumber" />
+            <input type="text" id="line-txt-FindTransfer" name="FindTransfer"
+              placeholder='Transfer Number'
+              className="text-center font-bold uj-inputnumber" />
             <div className="uj-line-transfer-btn">
               <button id="line-btn-blind-transfer"
                 onClick={() => UJP.BlindTransfer()}
@@ -224,15 +226,14 @@ export default function Phone() {
           <div className="flex justify-around w-full">
             <button
               onClick={() => UJP.RejectCall()}
-              className="rejectButton uj-btn uj-btn-red rotate-135"
+              className="uj-btn-circle rejectButton text-white bg-red-600 rotate-135"
               title="Reject">
-              <FontAwesomeIcon icon={faPhone} size="2x" />
+              <i className=''> <FontAwesomeIcon icon={faPhone} size="2x" /> </i>
             </button>
-            <button
-              onClick={() => UJP.AnswerAudioCall()}
-              className="uj-btn answerButton"
-              title="Answer">
-              <FontAwesomeIcon icon={faPhone} size="2x" className="text-green-600" />
+            <button onClick={() => UJP.AnswerAudioCall()}
+              title='Answer'
+              className="uj-btn-circle answerButton text-white bg-green-600">
+              <FontAwesomeIcon icon={faPhone} size="2x" className="" />
             </button>
           </div>
         </div>

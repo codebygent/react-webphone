@@ -9,7 +9,7 @@
     }
 
     .div-height {
-        min-height: 450px;
+        min-height: calc(var(--app-height) - 52px);
         justify-content: space-around;
     }
 

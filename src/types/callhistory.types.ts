@@ -1,12 +1,12 @@
 export type CallDirection = 'inbound' | 'outbound';
-export type CallStatus = 'answered' | 'missed' | 'rejected';
+export type CallStatus = 'Answered' | 'Missed' | 'Rejected';
 
 export interface Call {
   id: number;
   timestamp: string;
   duration: number;
-  number: string;
-  name: string;
+  number: string | undefined;
+  name: string | undefined;
   direction: CallDirection;
   status: CallStatus;
   recording: string | null;

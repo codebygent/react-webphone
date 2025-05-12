@@ -16,10 +16,10 @@ const useHistoryStore = create<CallHistoryStore>()(
           id: Date.now(),
           timestamp: new Date().toISOString(),
           duration: call.duration ?? 0,
-          number: call.number ?? '',
-          name: call.name ?? 'Unknown',
+          number: call.number,
+          name: call.name,
           direction: call.direction ?? 'inbound',
-          status: call.status ?? 'missed',
+          status: call.status ?? 'Missed',
           recording: call.recording ?? null,
         };
         
@@ -45,8 +45,8 @@ const useHistoryStore = create<CallHistoryStore>()(
         if (!filter) return state.calls;
         
         return state.calls.filter(call => 
-          call.number.includes(filter) || 
-          call.name.toLowerCase().includes(filter.toLowerCase())
+          call.number?.includes(filter) || 
+          call.name?.toLowerCase().includes(filter.toLowerCase())
         );
       }
     }),

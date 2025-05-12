@@ -7,31 +7,42 @@
   --ksk-pink-light: #cd89cc;
   --ksk-purple: #5C0F8B;
   --ksk-grey: #54565A;
+  --app-height: 550px
 }
-.main-body{
+
+.main-body {
   background-color: #232933;
 }
-.main-body .ant-card.jz-card{
+
+.main-body .ant-card.jz-card {
   border-radius: 0px;
 }
-.ant-card.jz-card .ant-card-body{
+
+.ant-card.jz-card .ant-card-body {
   padding: 0px;
   background: linear-gradient(to bottom, var(--ksk-green-light), white);
   border-radius: 0px;
 }
 
-li a.flex{
+li a.flex {
   color: var(--ksk-pink-light);
 }
 
 
-li a.flex.text-secondary{
+li a.flex.text-secondary {
   color: var(--ksk-pink);
 }
 
-.bottom-nav{
-  background-color:var(--ksk-green-light) ;
+.bottom-nav {
+  background-color: var(--ksk-green-light);
   position: absolute;
   bottom: 0px;
   width: 100%;
+}
+
+.peop-height {
+  height: calc(var(--app-height) - 235px)
+}
+.hist-height{
+  height: calc(var(--app-height) - 190px)
 }

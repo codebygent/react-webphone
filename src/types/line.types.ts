@@ -25,6 +25,7 @@ interface ExtendedInviter extends Inviter {
   isOnHold: boolean;
   _contact: string;
   callId?: string;
+  DisplayName:string;
   sessionState: SessionState;
   startTime?: Date;
   endTime?: Date;

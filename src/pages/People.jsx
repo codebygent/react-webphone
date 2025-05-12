@@ -1,11 +1,20 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useContactsStore } from '../store/contactsStore';
 import teamPlaceholder from '../assets/images/team-placeholder.png';
 import logo from '../assets/images/logo.png';
+import usePhoneStore from '../store/phone.store';
 
 export default function People() {
   const { contacts, isLoading, error, fetchContacts } = useContactsStore();
-
+  const navigate = useNavigate();
+  const { setNumber,setName } = usePhoneStore();
+  
+  const handleCall = (number,name) => {
+    setNumber(number);
+    setName(name);
+    navigate('/phone');
+  };
   useEffect(() => {
     if (contacts.length == 0) {
       fetchContacts();
@@ -39,17 +48,17 @@ export default function People() {
         </button>
       </nav>
       {isLoading ? (
-        <div className="flex justify-center items-center h-[380px]">
+        <div className="flex justify-center items-center peop-height">
           <img
             src={teamPlaceholder}
             alt="Loading contacts..."
             className="w-50 h-50 opacity-50"
           />
         </div>) : (<>
-          <ul className="divide-y max-h-[380px] overflow-y-scroll divide-[#e6d9e0]">
+          <ul className="divide-y peop-height overflow-y-scroll divide-[#e6d9e0]">
             {contacts.map((contact, index) => (
-              <li
-                className="flex items-center gap-4 px-4 py-4"
+              <li onClick={()=> handleCall(contact.contactNumber,contact.contactName)}
+                className="flex items-center gap-4 px-3 py-3"
                 key={`${contact.contactNumber}-${contact.contactType}-${index}`}
               >
                 <div

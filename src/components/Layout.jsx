@@ -59,7 +59,7 @@ export default function Layout({ showNav = true, showlogo = true, showuser = tru
       <main className="flex-1 main-body">
         <div className="flex items-center justify-center min-h-[100vh]">
           <Card className="w-full max-w-[350px] shadow-lg rounded-lg relative jz-card">
-            <div className='pb-[56px] min-h-[506px]'>
+            <div className='pb-[56px] h-[var(--app-height)]'>
               <Outlet />
             </div>
             {showNav && renderNav()}

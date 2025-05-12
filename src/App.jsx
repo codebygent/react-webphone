@@ -11,11 +11,12 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<Login />} />
-
+        <Route element={<Layout showNav={false} showlogo={false} />}>
+          <Route path="/login" element={<Login />} />
+        </Route>
         {/* Group all protected routes */}
         <Route element={<ProtectedRoute />}>
-          <Route element={<Layout />}>
+          <Route element={<Layout showNav={true}  showlogo={true} />}>
             <Route path="/" element={<Phone />} />
             <Route path="/phone" element={<Phone />} />
             <Route path="/todo" element={<Todo />} />

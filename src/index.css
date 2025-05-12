@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --ksk-green-light: #b8e4da;
+  --ksk-green-light: #CEF2E9;
   --ksk-green: #7DBAAB;
   --ksk-pink: #91278F;
   --ksk-pink-light: #cd89cc;
@@ -16,7 +16,7 @@
 }
 .ant-card.jz-card .ant-card-body{
   padding: 0px;
-  background: linear-gradient(to bottom, var(--ksk-green), white);
+  background: linear-gradient(to bottom, var(--ksk-green-light), white);
   border-radius: 0px;
 }
 

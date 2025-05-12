@@ -1,246 +1,140 @@
 import { useState } from 'react';
-import { Card, Form, Input, Button, message } from 'antd';
-import { UserOutlined, LockOutlined, MobileOutlined, KeyOutlined } from '@ant-design/icons';
 import { useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
-import { showSuccess ,showError} from '../components/helpers/notifications';
+import { showSuccess, showError } from '../components/helpers/notifications';
+import logo from '../assets/images/logo.png';
 
 const Login = () => {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [loginMethod, setLoginMethod] = useState(null); // 'email' or 'mobile'
-  const [showPasswordField, setShowPasswordField] = useState(false);
-  const [showPinField, setShowPinField] = useState(false);
-  const [email, setEmail] = useState('');
-  const [mobile, setMobile] = useState('');
-  
-  const { 
-    checkEmailPreLogin, 
-    loginWithEmailPassword, 
-    sendPinCode,
-    loginWithMobilePincode 
-  } = useAuthStore();
+  const [errors, setErrors] = useState({});
+
+  const { loginWithEmailPassword } = useAuthStore();
   const navigate = useNavigate();
 
-  const handleEmailPreLogin = async (values) => {
-    setLoading(true);
-    try {
-      const result = await checkEmailPreLogin(values.email);
-      if (result.success) {
-        setEmail(values.email);
-        setShowPasswordField(true);
-      } else {
-        showError(result.message || 'Email check failed');
-      }
-    } finally {
-      setLoading(false);
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+    // Clear error when user starts typing
+    if (errors[id]) {
+      setErrors(prev => ({ ...prev, [id]: '' }));
     }
   };
 
-  const handleEmailLogin = async (values) => {
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email';
+    }
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
     setLoading(true);
     try {
-      const result = await loginWithEmailPassword(email, values.password);
+      const result = await loginWithEmailPassword(formData.email, formData.password);
       if (result.success) {
         showSuccess('Login successful!');
-        navigate('/');
+        navigate('/phone');
       } else {
         showError(result.message || 'Login failed');
       }
+    } catch (error) {
+      showError(error.message || 'An error occurred');
     } finally {
       setLoading(false);
     }
   };
-
-  const handleSendPinCode = async (values) => {
-    setLoading(true);
-    try {
-      const result = await sendPinCode(values.mobile);
-      if (result.success) {
-        setMobile(values.mobile);
-        setShowPinField(true);
-        message.success('PIN code sent successfully!');
-      } else {
-        message.error(result.message || 'Failed to send PIN');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleMobileLogin = async (values) => {
-    setLoading(true);
-    try {
-      const result = await loginWithMobilePincode(mobile, values.pincode);
-      if (result.success) {
-        message.success('Login successful!');
-        navigate('/');
-      } else {
-        message.error(result.message || 'Login failed');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const renderInitialButtons = () => (
-    <div className="space-y-4">
-      <Button 
-        type="primary" 
-        block 
-        size="large"
-        onClick={() => setLoginMethod('email')}
-        style={{ backgroundColor: 'var(--ksk-green)', borderColor: 'var(--ksk-green)' }}
-        className="hover:opacity-90"
-      >
-        Login with Email
-      </Button>
-      <Button 
-        type="primary" 
-        block 
-        size="large"
-        onClick={() => setLoginMethod('mobile')}
-        style={{ backgroundColor: 'var(--ksk-purple)', borderColor: 'var(--ksk-purple)' }}
-        className="hover:opacity-90"
-      >
-        Login with Mobile
-      </Button>
-    </div>
-  );
-
-  const renderEmailLogin = () => (
-    <div className="space-y-4">
-      {!showPasswordField ? (
-        <Form onFinish={handleEmailPreLogin} layout="vertical">
-          <Form.Item
-            name="email"
-            rules={[{ required: true, message: 'Please input your email!' }]}
-          >
-            <Input 
-              prefix={<UserOutlined />} 
-              placeholder="Email"
-              className="h-10"
-            />
-          </Form.Item>
-          <Button 
-            type="primary" 
-            htmlType="submit" 
-            loading={loading}
-            style={{ backgroundColor: 'var(--ksk-green)', borderColor: 'var(--ksk-green)' }}
-            className="w-full h-10 hover:opacity-90"
-          >
-            Continue
-          </Button>
-        </Form>
-      ) : (
-        <Form onFinish={handleEmailLogin} layout="vertical">
-          <div className="mb-4 text-sm text-gray-600">
-            Email: {email}
-          </div>
-          <Form.Item
-            name="password"
-            rules={[{ required: true, message: 'Please input your password!' }]}
-          >
-            <Input.Password 
-              prefix={<LockOutlined />} 
-              placeholder="Password"
-              className="h-10"
-            />
-          </Form.Item>
-          <Button 
-            type="primary" 
-            htmlType="submit" 
-            loading={loading}
-            style={{ backgroundColor: 'var(--ksk-green)', borderColor: 'var(--ksk-green)' }}
-            className="w-full h-10 hover:opacity-90"
-          >
-            Log in
-          </Button>
-        </Form>
-      )}
-    </div>
-  );
-
-  const renderMobileLogin = () => (
-    <div className="space-y-4">
-      {!showPinField ? (
-        <Form onFinish={handleSendPinCode} layout="vertical">
-          <Form.Item
-            name="mobile"
-            rules={[{ required: true, message: 'Please input your mobile number!' }]}
-          >
-            <Input 
-              prefix={<MobileOutlined />} 
-              placeholder="Mobile Number"
-              className="h-10"
-            />
-          </Form.Item>
-          <Button 
-            type="primary" 
-            htmlType="submit" 
-            loading={loading}
-            style={{ backgroundColor: 'var(--ksk-green)', borderColor: 'var(--ksk-green)' }}
-            className="w-full h-10 hover:opacity-90"
-          >
-            Send PIN Code
-          </Button>
-        </Form>
-      ) : (
-        <Form onFinish={handleMobileLogin} layout="vertical">
-          <div className="mb-4 text-sm text-gray-600">
-            Mobile: {mobile}
-          </div>
-          <Form.Item
-            name="pincode"
-            rules={[{ required: true, message: 'Please input the PIN code!' }]}
-          >
-            <Input 
-              prefix={<KeyOutlined />} 
-              placeholder="Enter PIN Code"
-              className="h-10"
-            />
-          </Form.Item>
-          <Button 
-            type="primary" 
-            htmlType="submit" 
-            loading={loading}
-            style={{ backgroundColor: 'var(--ksk-green)', borderColor: 'var(--ksk-green)' }}
-            className="w-full h-10 hover:opacity-90"
-          >
-            Log in
-          </Button>
-        </Form>
-      )}
-    </div>
-  );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-[400px] shadow-lg rounded-lg">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold" style={{ color: 'var(--ksk-purple)' }}>Welcome Back</h2>
-          <p className="mt-2" style={{ color: 'var(--ksk-grey)' }}>Please sign in to your account</p>
-        </div>
-        
-        {!loginMethod && renderInitialButtons()}
-        {loginMethod === 'email' && renderEmailLogin()}
-        {loginMethod === 'mobile' && renderMobileLogin()}
+    <div className='p-3 py-15'>
 
-        {loginMethod && (
-          <Button 
-            type="link" 
-            className="mt-4"
-            onClick={() => {
-              setLoginMethod(null);
-              setShowPasswordField(false);
-              setShowPinField(false);
-              setEmail('');
-              setMobile('');
-            }}
+      <div className="text-center mb-12">
+        <div className="flex justify-center items-center space-x-2 mb-2">
+          <img
+            alt="Kasookoo logo"
+            className="w-40 h-8"
+            src={logo}
+          />
+        </div>
+        <h1 className="font-montserrat text-[24px] font-extrabold text-[#3a1f7a] leading-none">
+          Let's Sign In..!
+        </h1>
+        <p className="font-semibold text-[16px] text-[#4a4a4a] mt-1">
+          Login to Your Account
+        </p>
+      </div>
+
+      <form className="w-full max-w-md space-y-6" onSubmit={handleSubmit}>
+        <div className="space-y-2">
+          <label
+            className="flex items-center bg-white rounded-xl px-5 py-4 text-[#4a4a4a] text-lg font-semibold shadow-sm border focus-within:border-[#8caea1]"
+            htmlFor="email"
           >
-            ← Back to login options
-          </Button>
-        )}
-      </Card>
+            <i className="far fa-envelope mr-3 text-lg"></i>
+            <input
+              className="w-full outline-none placeholder:text-[#4a4a4a] placeholder:font-semibold bg-transparent"
+              id="email"
+              placeholder="Email"
+              type="email"
+              value={formData.email}
+              onChange={handleInputChange}
+            />
+          </label>
+          {errors.email && <p className="text-red-500 text-sm pl-5">{errors.email}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <label
+            className="flex items-center justify-between bg-white rounded-xl px-5 py-4 text-[#4a4a4a] text-lg font-semibold shadow-sm border focus-within:border-[#8caea1]"
+            htmlFor="password"
+          >
+            <div className="flex items-center space-x-3 flex-1">
+              <i className="fas fa-lock text-lg"></i>
+              <input
+                className="w-full outline-none placeholder:text-[#4a4a4a] placeholder:font-semibold bg-transparent"
+                id="password"
+                placeholder="Password"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={handleInputChange}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="focus:outline-none"
+            >
+              <i className={`fas ${showPassword ? 'fa-eye' : 'fa-eye-slash'} text-lg`}></i>
+            </button>
+          </label>
+          {errors.password && <p className="text-red-500 text-sm pl-5">{errors.password}</p>}
+        </div>
+
+        <button
+          className={`w-full max-w-[280px] mx-auto block bg-[#8caea1] text-white font-semibold text-lg rounded-full py-4 shadow-md hover:bg-[#7ba592] transition-colors ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+          type="submit"
+          disabled={loading}
+        >
+          {loading ? 'Signing In...' : 'Sign In'}
+        </button>
+      </form>
     </div>
   );
 };

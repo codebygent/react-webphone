@@ -84,7 +84,6 @@ export default function Phone() {
             <div className="text-center">
               <div className="uj-avatar">
                 <FontAwesomeIcon icon={faUser} size="4x" />
-                <span className="uj-name-prefix"></span>
               </div>
               <div className="callingDisplayName">Unknown</div>
               <div className="callingDisplayNumber"></div>
@@ -218,7 +217,6 @@ export default function Phone() {
 
             <div className="uj-avatar">
               <FontAwesomeIcon icon={faUser} size="4x" />
-              <span className="uj-name-prefix"></span>
             </div>
             <div className="callingDisplayName">Unknown</div>
             <div className="callingDisplayNumber"></div>

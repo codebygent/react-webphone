@@ -58,7 +58,7 @@ export default function People() {
           <ul className="divide-y peop-height overflow-y-scroll divide-[#e6d9e0]">
             {contacts.map((contact, index) => (
               <li onClick={()=> handleCall(contact.contactNumber,contact.contactName)}
-                className="flex items-center gap-4 px-3 py-3"
+                className="flex items-center gap-4 px-3 py-3 cursor-pointer"
                 key={`${contact.contactNumber}-${contact.contactType}-${index}`}
               >
                 <div

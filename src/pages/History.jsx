@@ -29,8 +29,9 @@ export default function History() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleCall = (number) => {
+  const handleCall = (number,name) => {
     setNumber(number);
+    setName(name);
     navigate('/phone');
   };
 
@@ -107,7 +108,7 @@ export default function History() {
                           </div>
                         </div>
                         <button
-                          onClick={() => handleCall(call.number)}
+                          onClick={() => handleCall(call.number,call.name)}
                           className="text-gray-500 hover:text-green-700"
                         >
                           <FontAwesomeIcon icon={faPhone} />

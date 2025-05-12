@@ -1084,7 +1084,6 @@ function teardownSession(lineObj) {
         moment.duration(moment.utc().diff(moment.utc(session.data.startTime))).asSeconds() : 0;
 
     // Add to history store
-    debugger;
     const callLog ={
         number: decodeURIComponent(session.data.dst || session.data.src),
         name: lineObj.DisplayName,

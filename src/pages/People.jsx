@@ -1,19 +1,26 @@
+import { useState } from 'react';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSearch, faUser } from '@fortawesome/free-solid-svg-icons';
 import { useContactsStore } from '../store/contactsStore';
 import teamPlaceholder from '../assets/images/team-placeholder.png';
 import logo from '../assets/images/logo.png';
-import usePhoneStore from '../store/phone.store';
+import * as UJP from '../store/uj-phone';
 
 export default function People() {
-  const { contacts, isLoading, error, fetchContacts } = useContactsStore();
+  const { contacts, isLoading, error, getFilteredTeams, getFilteredContacts, fetchContacts } = useContactsStore();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('contacts');
   const navigate = useNavigate();
-  const { setNumber,setName } = usePhoneStore();
-  
-  const handleCall = (number,name) => {
-    setNumber(number);
-    setName(name);
+  const filteredContacts = getFilteredContacts(searchTerm);
+  const filteredTeams = getFilteredTeams(searchTerm);
+
+  const handleCall = (number, name) => {
     navigate('/phone');
+    setTimeout(() => {
+      UJP.DialByLine(name, number);
+    }, 100);
   };
   useEffect(() => {
     if (contacts.length == 0) {
@@ -21,7 +28,6 @@ export default function People() {
     }
   }, [fetchContacts]);
 
-  if (error) return <div>Error: {error}</div>;
 
   return (
     <div>
@@ -32,52 +38,79 @@ export default function People() {
         </h1>
       </header>
       <div className="px-4 py-2 bg-[#f3f7fa] flex mb-2 border-b border-t">
-        <i className="fas fa-search text-gray-500 text-lg"></i>
+        <FontAwesomeIcon
+          icon={faSearch}
+          className="text-gray-500 text-lg"
+        />
         <input
-          className="flex-1 bg-[#f3f7fa] placeholder:text-[15px] focus:outline-none text-[15px] font-semibold"
+          className="flex-1 bg-[#f3f7fa] px-2 placeholder:text-[15px] focus:outline-none text-[15px] font-semibold"
           placeholder="Search name, number....."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
           type="text"
         />
       </div>
       <nav className="flex border-b border-[#b6d4c6]">
-        <button className="flex-1 py-3 text-center text-gray-700 font-semibold bg-white border-r border-[#b6d4c6]" type="button">
+        <button
+          className={`flex-1 py-3 text-center font-semibold bg-white border-r border-[#b6d4c6] 
+            ${activeTab === 'contacts' ? 'text-[var(--ksk-pink)]' : 'text-gray-700'}`}
+          type="button"
+          onClick={() => setActiveTab('contacts')}
+        >
           Contacts
         </button>
-        <button className="flex-1 py-3 text-center text-[var(--ksk-pink)] bg-white font-semibold" type="button">
+        <button
+          className={`flex-1 py-3 text-center font-semibold bg-white
+            ${activeTab === 'teams' ? 'text-[var(--ksk-pink)]' : 'text-gray-700'}`}
+          type="button"
+          onClick={() => setActiveTab('teams')}
+        >
           Teammates
         </button>
       </nav>
-      {isLoading ? (
-        <div className="flex justify-center items-center peop-height">
-          <img
-            src={teamPlaceholder}
-            alt="Loading contacts..."
-            className="w-50 h-50 opacity-50"
-          />
-        </div>) : (<>
-          <ul className="divide-y peop-height overflow-y-scroll divide-[#e6d9e0]">
-            {contacts.map((contact, index) => (
-              <li onClick={()=> handleCall(contact.contactNumber,contact.contactName)}
-                className="flex items-center gap-4 px-3 py-3 cursor-pointer"
-                key={`${contact.contactNumber}-${contact.contactType}-${index}`}
-              >
-                <div
-                  className="w-10 h-10 rounded-full flex-shrink-0 bg-[#b81f6a] flex items-center justify-center"
+      {
+
+        (activeTab === 'contacts' ? filteredContacts : filteredTeams).length == 0 || error ? (
+          <>
+            {error && (<div>Error: {error}</div>)};
+            <div className="flex justify-center items-center peop-height">
+              <img
+                src={teamPlaceholder}
+                alt="Loading contacts..."
+                className="w-50 h-50 opacity-50"
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <ul className="divide-y peop-height overflow-y-scroll divide-[#e6d9e0]">
+              {(activeTab === 'contacts' ? filteredContacts : filteredTeams).map((contact, index) => (
+                <li
+                  onClick={() => handleCall(contact.contactNumber, contact.contactName)}
+                  className="flex items-center gap-4 px-3 py-3 cursor-pointer"
+                  key={`${contact.contactNumber}-${contact.contactType}-${index}`}
                 >
-                  <i className="fas fa-user text-white text-xl"></i>
-                </div>
-                <div>
-                  <p className="font-semibold text-[17px] text-gray-900 leading-tight">
-                    {contact.contactName || contact.contactNumber}
-                  </p>
-                  <p className="text-gray-500 text-[15px] leading-tight">
-                    {contact.status || 'Offline'}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </>)}
+                  <div
+                    className="w-10 h-10 rounded-full flex-shrink-0 bg-[#b81f6a] flex items-center justify-center"
+                  >
+                    <FontAwesomeIcon
+                      icon={faUser}
+                      className="text-white text-xl"
+                    />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-[17px] text-gray-900 leading-tight">
+                      {contact.contactName || contact.contactNumber}
+                    </p>
+                    <p className="text-gray-500 text-[15px] leading-tight">
+                      {contact.status || 'Offline'}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
     </div>
   );
 }

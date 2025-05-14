@@ -11,7 +11,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route element={<Layout showNav={false} showlogo={false} />}>
+        <Route element={<Layout showNav={false} showlogo={false} showuser={false} />}>
           <Route path="/login" element={<Login />} />
         </Route>
         {/* Group all protected routes */}

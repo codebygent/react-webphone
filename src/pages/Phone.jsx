@@ -19,13 +19,31 @@ import {
 import {
 } from '@fortawesome/free-regular-svg-icons';
 import usePhoneStore from '../store/phone.store';
+import useHistoryStore from '../store/history.store';
+import { initializeStores } from '../store/uj-phone';
+import { useState, useEffect } from 'react';
 
 export default function Phone() {
-  const { number: phoneNumber, setNumber: setPhoneNumber, name, clearNumberName } = usePhoneStore();
+  const { isInCall, isIncomingCall, setInCall, setIncomingCall } = usePhoneStore();
+  const historyStore = useHistoryStore();
+
+  useEffect(() => {
+    initializeStores({
+      phoneStore: {
+        setInCall: setInCall,
+        setIncomingCall: setIncomingCall
+      },
+      historyStore: {
+        addCall: historyStore.addCall
+      }
+    });
+  }, []);
+
+  const [phoneNumber, setPhoneNumber] = useState('');
 
   const handleDialByLine = () => {
     if (phoneNumber) {
-      UJP.DialByLine(name, phoneNumber)
+      UJP.DialByLine("", phoneNumber)
       clearNumberName();
     }
   };
@@ -43,7 +61,7 @@ export default function Phone() {
       <h3><b id="regStatus"></b></h3>
 
 
-      <div className="uj-divDialPad" >
+      <div className="uj-divDialPad" style={{ display: isInCall || isIncomingCall ? "none" : "block" }} >
         <div className="flex flex-col items-center div-height">
           <div className='min-h-10'></div>
           <div className='w-full relative'>
@@ -74,7 +92,7 @@ export default function Phone() {
         </div>
       </div>
 
-      <div className="uj-divInCallContainer" style={{ display: "none" }} >
+      <div className="uj-divInCallContainer" style={{ display: isInCall ? "block" : "none" }} >
         <div className="flex flex-col items-center div-height" >
           <div className="text-center">
             <audio id="line-transfer-remoteAudio" className="d-none" > </audio>
@@ -211,7 +229,8 @@ export default function Phone() {
           </div>
         </div>
       </div>
-      <div id="line-AnswerCall" className="uj-DivAnswerCall" style={{ display: "none" }} >
+
+      <div id="line-AnswerCall" className="uj-DivAnswerCall" style={{ display: isIncomingCall ? "block" : "none" }} >
         <div className="flex flex-col items-center div-height"  >
           <div className="text-center">
 

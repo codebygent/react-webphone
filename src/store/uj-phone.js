@@ -3,7 +3,12 @@ import * as SIP from 'sip.js';
 import moment from 'moment';
 import { Line } from '../types/line.types';
 import { message } from 'antd';
-import useHistoryStore from './history.store';
+
+// Remove direct hook calls
+let setInCall = null;
+let setIncomingCall = null;
+let addCall = null;
+
 
 //#region Global Settings
 // ===============
@@ -132,6 +137,15 @@ export function InitUi(data) {
     PreloadAudioFiles()
     CreateUserAgent();
     RegisterEvents();
+}
+
+export function initializeStores(stores) {
+    const phoneStore = stores.phoneStore;
+    const historyStore = stores.historyStore;
+
+    setInCall = phoneStore.setInCall;
+    setIncomingCall = phoneStore.setIncomingCall;
+    addCall = historyStore.addCall;
 }
 
 function PreloadAudioFiles() {
@@ -1077,14 +1091,13 @@ function teardownSession(lineObj) {
     session.data.teardownComplete = true; // Run this code only once
 
     // Add call to history
-    const { addCall } = useHistoryStore.getState();
 
     // Calculate duration
     const duration = session.data.startTime ?
         moment.duration(moment.utc().diff(moment.utc(session.data.startTime))).asSeconds() : 0;
 
     // Add to history store
-    const callLog ={
+    const callLog = {
         number: decodeURIComponent(session.data.dst || session.data.src),
         name: lineObj.DisplayName,
         direction: session.data.calldirection,
@@ -2623,6 +2636,7 @@ function web_hook_on_invite(session) {
     $(".uj-DivAnswerCall").show();
     $(".uj-divDialPad").hide();
     $(".uj-divInCallContainer").hide();
+    setIncomingCall(true);
     ShowCallerInfo(session);
 }
 
@@ -2649,6 +2663,9 @@ function ShowCallerInfo(session) {
 }
 
 function CallInitiated(t, session) {
+    setIncomingCall(false);
+    setInCall(true);
+
     $(".uj-divInCallContainer").show();
 
     $(".uj-divDialPad").hide();
@@ -2699,7 +2716,9 @@ function RegisterEvents() {
             $(".uj-DivAnswerCall").hide();
             var msg = codes[statusCode] || `Status : ${statusCode} `;
             message.error(msg);
-            console.log(" Call Teminated ==== > ", statusCode, msg, line)
+            console.log(" Call Teminated ==== > ", statusCode, msg, line);
+            setInCall(false);
+            setIncomingCall(false);
         }
     });
 

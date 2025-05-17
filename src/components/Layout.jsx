@@ -4,8 +4,11 @@ import { NavLink } from 'react-router-dom';
 import { Card } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faKeyboard, faListAlt, faHistory, faUsers } from '@fortawesome/free-solid-svg-icons';
+import usePhoneStore from '../store/phone.store';
 
 export default function Layout({ showNav = true, showlogo = true, showuser = true }) {
+
+  const {isInCall,isIncomingCall} = usePhoneStore();
 
   const renderNav = () => (
 
@@ -62,7 +65,7 @@ export default function Layout({ showNav = true, showlogo = true, showuser = tru
             <div className='pb-[56px] h-[var(--app-height)]'>
               <Outlet />
             </div>
-            {showNav && renderNav()}
+            {showNav && !isInCall && !isIncomingCall && renderNav()}
           </Card>
 
         </div>

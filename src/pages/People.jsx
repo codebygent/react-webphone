@@ -9,7 +9,7 @@ import logo from '../assets/images/logo.png';
 import * as UJP from '../store/uj-phone';
 
 export default function People() {
-  const { contacts, isLoading, error, getFilteredTeams, getFilteredContacts, fetchContacts } = useContactsStore();
+  const { contacts, teammates, isLoading, error, getFilteredTeams, getFilteredContacts, fetchContacts, fetchTeammates } = useContactsStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('contacts');
   const navigate = useNavigate();
@@ -25,6 +25,9 @@ export default function People() {
   useEffect(() => {
     if (contacts.length == 0) {
       fetchContacts();
+    }
+    if (teammates.length == 0) {
+      fetchTeammates();
     }
   }, [fetchContacts]);
 
@@ -86,24 +89,26 @@ export default function People() {
             <ul className="divide-y peop-height overflow-y-scroll divide-[#e6d9e0]">
               {(activeTab === 'contacts' ? filteredContacts : filteredTeams).map((contact, index) => (
                 <li
-                  onClick={() => handleCall(contact.contactNumber, contact.contactName)}
+                  onClick={() => handleCall(contact.number, contact.fullName)}
                   className="flex items-center gap-4 px-3 py-3 cursor-pointer"
-                  key={`${contact.contactNumber}-${contact.contactType}-${index}`}
+                  key={`${contact.id}`}
                 >
                   <div
                     className="w-10 h-10 rounded-full flex-shrink-0 bg-[#b81f6a] flex items-center justify-center"
                   >
-                    <FontAwesomeIcon
+                    {contact.avatar ? (
+                      <img className="w-7 h-7" src={contact.avatar} />
+                    ) : (<FontAwesomeIcon
                       icon={faUser}
                       className="text-white text-xl"
-                    />
+                    />)}
                   </div>
                   <div>
                     <p className="font-semibold text-[17px] text-gray-900 leading-tight">
-                      {contact.contactName || contact.contactNumber}
+                      {contact.fullName}
                     </p>
                     <p className="text-gray-500 text-[15px] leading-tight">
-                      {contact.status || 'Offline'}
+                      {contact.status == 'REGISTERED' ? 'Online' : 'Offline'}
                     </p>
                   </div>
                 </li>

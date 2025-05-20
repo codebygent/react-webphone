@@ -7,7 +7,7 @@
   --ksk-pink-light: #cd89cc;
   --ksk-purple: #5C0F8B;
   --ksk-grey: #54565A;
-  --app-height: 550px
+  --app-height: 100vh
 }
 
 .main-body {
@@ -16,6 +16,12 @@
 
 .main-body .ant-card.jz-card {
   border-radius: 0px;
+  width: 100%;
+  max-width: 450px;
+}
+
+.main-body .ant-card.jz-card .jz-card-body {
+  height: var(--app-height);
 }
 
 .ant-card.jz-card .ant-card-body {
@@ -41,8 +47,9 @@ li a.flex.text-secondary {
 }
 
 .peop-height {
-  height: calc(var(--app-height) - 235px)
+  height: calc(var(--app-height) - 200px)
 }
-.hist-height{
-  height: calc(var(--app-height) - 190px)
+
+.hist-height {
+  height: calc(var(--app-height) - 155px)
 }

@@ -30,8 +30,8 @@ export const useContactsStore = create<ContactsState>((set, get) => ({
     if (!filter) return state.contacts;
 
     return state.contacts.filter(call =>
-      call.fullName?.includes(filter) ||
-      call.number?.toLowerCase().includes(filter.toLowerCase())
+      call.number?.includes(filter) ||
+      call.fullName?.toLowerCase().includes(filter.toLowerCase())
     );
   },
 
@@ -41,8 +41,8 @@ export const useContactsStore = create<ContactsState>((set, get) => ({
     if (!filter) filtered = state.teammates;
 
     filtered = state.teammates.filter(call =>
-      call.name?.includes(filter) ||
-      call.extension?.toLowerCase().includes(filter.toLowerCase())
+      call.extension?.includes(filter) ||
+      call.name?.toLowerCase().includes(filter.toLowerCase())
     );
 
 

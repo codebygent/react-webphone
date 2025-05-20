@@ -5,10 +5,11 @@ import { Card } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faKeyboard, faListAlt, faHistory, faUsers } from '@fortawesome/free-solid-svg-icons';
 import usePhoneStore from '../store/phone.store';
+import logo from '../assets/images/logo.png';
 
 export default function Layout({ showNav = true, showlogo = true, showuser = true }) {
 
-  const {isInCall,isIncomingCall} = usePhoneStore();
+  const { isInCall, isIncomingCall } = usePhoneStore();
 
   const renderNav = () => (
 
@@ -58,11 +59,15 @@ export default function Layout({ showNav = true, showlogo = true, showuser = tru
 
   return (
     <div className="min-h-screen flex flex-col">
-      {showuser && <UserMenu />}
+      
       <main className="flex-1 main-body">
         <div className="flex items-center justify-center min-h-[100vh]">
-          <Card className="w-full max-w-[350px] shadow-lg rounded-lg relative jz-card">
-            <div className='pb-[56px] h-[var(--app-height)]'>
+          <Card className="shadow-lg rounded-lg relative jz-card">
+            <div className='pb-[56px] jz-card-body'>
+              <header className="p-3">
+                <img src={logo} className='mb-2 w-[120px]' />
+                {showuser && <UserMenu />}
+              </header>
               <Outlet />
             </div>
             {showNav && !isInCall && !isIncomingCall && renderNav()}

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import useHistoryStore from '../store/history.store';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPhone, faArrowRight, faArrowLeft, faClock, faSearch } from '@fortawesome/free-solid-svg-icons';
-import logo from '../assets/images/logo.png';
 import { format, isToday, isYesterday } from 'date-fns';
 import * as UJP from '../store/uj-phone';
 
@@ -63,12 +62,6 @@ export default function History() {
 
   return (
     <div>
-      <header className="p-3">
-        <img src={logo} className='mb-2 w-[120px]' />
-        <h1 className="text-[20px] font-extrabold text-[var(--ksk-pink)]">
-          History
-        </h1>
-      </header>
       <div className="px-4 py-2 bg-[#f3f7fa] flex mb-2 border-b border-t">
         <FontAwesomeIcon
           icon={faSearch}

@@ -5,7 +5,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faUser } from '@fortawesome/free-solid-svg-icons';
 import { useContactsStore } from '../store/contactsStore';
 import teamPlaceholder from '../assets/images/team-placeholder.png';
-import logo from '../assets/images/logo.png';
 import * as UJP from '../store/uj-phone';
 
 export default function People() {
@@ -34,12 +33,6 @@ export default function People() {
 
   return (
     <div>
-      <header className="p-3">
-        <img src={logo} className='mb-2 w-[120px]' />
-        <h1 className="text-[20px] font-extrabold text-[var(--ksk-pink)]">
-          People
-        </h1>
-      </header>
       <div className="px-4 py-2 bg-[#f3f7fa] flex mb-2 border-b border-t">
         <FontAwesomeIcon
           icon={faSearch}

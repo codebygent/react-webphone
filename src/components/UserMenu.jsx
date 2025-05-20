@@ -27,10 +27,10 @@ export default function UserMenu() {
   ];
 
   return (
-    <div className="absolute p-4">
+    <div className="absolute p-2 top-0 right-0">
       <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight" arrow>
         <Avatar
-          size="large"
+          size="medium"
           icon={<UserOutlined />}
           className="cursor-pointer bg-gray-300 hover:bg-gray-400"
         />

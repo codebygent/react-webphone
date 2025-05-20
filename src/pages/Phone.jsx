@@ -63,7 +63,6 @@ export default function Phone() {
 
       <div className="uj-divDialPad" style={{ display: isInCall || isIncomingCall ? "none" : "block" }} >
         <div className="flex flex-col items-center div-height">
-          <div className='min-h-10'></div>
           <div className='w-full relative'>
 
             <input
@@ -75,13 +74,17 @@ export default function Phone() {
               maxLength="15"
             />
 
-            <button
-              onClick={() => setPhoneNumber(phoneNumber.slice(0, -1))}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-              title="Clear number"
-            >
-              <FontAwesomeIcon icon={faTimes} />
-            </button>
+            
+            {phoneNumber && (
+
+              <button
+                onClick={() => setPhoneNumber(phoneNumber.slice(0, -1))}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                title="Clear number"
+              >
+                <FontAwesomeIcon icon={faTimes} />
+              </button>
+            )}
           </div>
           <DialPad onDigitClick={handleDigitClick} />
           <div className='mb-4'>

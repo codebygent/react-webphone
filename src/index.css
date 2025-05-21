@@ -1,13 +1,16 @@
 @import "tailwindcss";
+@import url('https://fonts.cdnfonts.com/css/gotham-htf');
+/* Add Gotham HTF font */
 
 :root {
-  --ksk-green-light: #CEF2E9;
-  --ksk-green: #7DBAAB;
+  /* --ksk-green-light: #CEF2E9; */
+  /* --ksk-pink-light: #cd89cc; */
   --ksk-pink: #91278F;
-  --ksk-pink-light: #cd89cc;
+  --ksk-green: #7DBAAB;
   --ksk-purple: #5C0F8B;
   --ksk-grey: #54565A;
-  --app-height: 100vh
+  --app-height: 100vh;
+  --default-font-family: 'Gotham HTF Light', sans-serif;
 }
 
 .main-body {
@@ -26,21 +29,21 @@
 
 .ant-card.jz-card .ant-card-body {
   padding: 0px;
-  background: linear-gradient(to bottom, var(--ksk-green-light), white);
+  background: white;
+  /* Removed gradient */
   border-radius: 0px;
 }
 
 li a.flex {
-  color: var(--ksk-pink-light);
+  color: var(--ksk-grey);
 }
 
-
-li a.flex.text-secondary {
-  color: var(--ksk-pink);
+li a.flex.text-primary {
+  color: var(--ksk-purple);
 }
 
 .bottom-nav {
-  background-color: var(--ksk-green-light);
+  background-color: var(--ksk-green);
   position: absolute;
   bottom: 0px;
   width: 100%;

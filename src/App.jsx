@@ -1,5 +1,6 @@
 import { HashRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import { ConfigProvider } from 'antd';
 import Phone from './pages/Phone';
 import Todo from './pages/Todo';
 import History from './pages/History';
@@ -40,9 +41,20 @@ function AppRoutes() {
 // Main App component
 function App() {
   return (
-    <Router>
-      <AppRoutes />
-    </Router>
+    <ConfigProvider
+      theme={{
+        components: {
+          Card: {
+            fontFamily: 'var(--default-font-family)',
+            borderRadius: 0,
+          },
+        },
+      }}
+    >
+      <Router>
+        <AppRoutes />
+      </Router>
+    </ConfigProvider>
   );
 }
 

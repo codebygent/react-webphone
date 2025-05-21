@@ -1361,25 +1361,25 @@ function AudioCall(lineObj, dialledNumber, extraHeaders) {
 
 
     try {
-        var ringer = new Audio(audioBlobs.CallWaiting.blob);
-        ringer.preload = "auto";
-        ringer.loop = true;
-        ringer.oncanplaythrough = function (e) {
-            if (typeof ringer.sinkId !== 'undefined' && getRingerOutputID() != "default") {
-                ringer.setSinkId(getRingerOutputID()).then(function () {
-                    console.log("Set sinkId to:", getRingerOutputID());
-                }).catch(function (e) {
-                    console.warn("Failed not apply setSinkId.", e);
-                });
-            }
-            // If there has been no interaction with the page at all... this page will not work
-            ringer.play().then(function () {
-                // Audio Is Playing
-            }).catch(function (e) {
-                console.warn("Unable to play audio file.", e);
-            });
-        }
-        lineObj.SipSession.data.ringerObj = ringer;
+        // var ringer = new Audio(audioBlobs.CallWaiting.blob);
+        // ringer.preload = "auto";
+        // ringer.loop = true;
+        // ringer.oncanplaythrough = function (e) {
+        //     if (typeof ringer.sinkId !== 'undefined' && getRingerOutputID() != "default") {
+        //         ringer.setSinkId(getRingerOutputID()).then(function () {
+        //             console.log("Set sinkId to:", getRingerOutputID());
+        //         }).catch(function (e) {
+        //             console.warn("Failed not apply setSinkId.", e);
+        //         });
+        //     }
+        //     // If there has been no interaction with the page at all... this page will not work
+        //     ringer.play().then(function () {
+        //         // Audio Is Playing
+        //     }).catch(function (e) {
+        //         console.warn("Unable to play audio file.", e);
+        //     });
+        // }
+        // lineObj.SipSession.data.ringerObj = ringer;
     } catch { }
 
     lineObj.SipSession.delegate = {

@@ -19,7 +19,7 @@ export default function Layout({ showNav = true, showlogo = true, showuser = tru
           <li>
             <NavLink
               to="/phone"
-              className={({ isActive }) => `flex flex-col items-center ${isActive ? 'text-secondary' : ''}`}
+              className={({ isActive }) => `flex flex-col items-center ${isActive ? 'text-primary' : ''}`}
             >
               <FontAwesomeIcon icon={faKeyboard} className="text-xl mb-1" />
               <span className="text-xs">Keypad</span>
@@ -28,7 +28,7 @@ export default function Layout({ showNav = true, showlogo = true, showuser = tru
           {/* <li>
                     <NavLink
                       to="/todo"
-                      className={({ isActive }) => `flex flex-col items-center ${isActive ? 'text-secondary' : ''}`}
+                      className={({ isActive }) => `flex flex-col items-center ${isActive ? 'text-primary' : ''}`}
                     >
                       <FontAwesomeIcon icon={faListAlt} className="text-xl mb-1" />
                       <span className="text-xs">Todo</span>
@@ -37,7 +37,7 @@ export default function Layout({ showNav = true, showlogo = true, showuser = tru
           <li>
             <NavLink
               to="/history"
-              className={({ isActive }) => `flex flex-col items-center ${isActive ? 'text-secondary' : ''}`}
+              className={({ isActive }) => `flex flex-col items-center ${isActive ? 'text-primary' : ''}`}
             >
               <FontAwesomeIcon icon={faHistory} className="text-xl mb-1" />
               <span className="text-xs">History</span>
@@ -46,7 +46,7 @@ export default function Layout({ showNav = true, showlogo = true, showuser = tru
           <li>
             <NavLink
               to="/people"
-              className={({ isActive }) => `flex flex-col items-center ${isActive ? 'text-secondary' : ''}`}
+              className={({ isActive }) => `flex flex-col items-center ${isActive ? 'text-primary' : ''}`}
             >
               <FontAwesomeIcon icon={faUsers} className="text-xl mb-1" />
               <span className="text-xs">People</span>
@@ -60,7 +60,7 @@ export default function Layout({ showNav = true, showlogo = true, showuser = tru
   return (
     <div className="min-h-screen flex flex-col">
       
-      <main className="flex-1 main-body">
+      <main className="flex-1 main-body font-gotham">
         <div className="flex items-center justify-center min-h-[100vh]">
           <Card className="shadow-lg rounded-lg relative jz-card">
             <div className='pb-[56px] jz-card-body'>

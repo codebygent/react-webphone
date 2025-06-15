@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
-import { User, AuthUser, WebRTCCredential } from '../types/user.types';
+import { User, AuthUser, WebRTCCredential, BusinessNumber } from '../types/user.types';
 import api from './axios.config';
 import { InitUi } from './uj-phone';
 import { message } from 'antd';
@@ -11,17 +11,23 @@ const API_URL = (import.meta as any).env.VITE_API_URL;
 interface AuthState {
   user: AuthUser | null;
   token: string | null;
+  status: string | null;
   isLoggedIn: boolean;
   userDetails: User | null;
+  activeBusinessNumber: BusinessNumber | null;
+  businessNumbers: BusinessNumber[] | null;
   webrtcCredentials: WebRTCCredential | null;
   checkEmailPreLogin: (email: string) => Promise<any>;
   loginWithEmailPassword: (email: string, password: string) => Promise<any>;
   sendPinCode: (mobileNumber: string) => Promise<any>;
   loginWithMobilePincode: (contactNumber: string, pincode: string) => Promise<any>;
   recoverPassword: (email: string) => Promise<any>;
+  setoutgoingbusinessnumber: (businessNumberId: string) => Promise<any>;
   logout: () => void;
   getUserDetails: () => Promise<any>;
+  setStatus: (status: string) => void;
   webrtcProvisioning: (extensionId: string) => Promise<any>;
+  getBusinessNumbers: (extensionId: string) => Promise<any>;
   initializeUserServices: () => Promise<void>;
 }
 
@@ -39,9 +45,12 @@ const getInitialState = () => {
   const state = {
     user: JSON.parse(localStorage.getItem('user') || 'null') as AuthUser | null,
     token: localStorage.getItem('token') || null,
+    status: 'available',
     isLoggedIn: localStorage.getItem('isLoggedIn') === 'true',
     userDetails: null as User | null,
     webrtcCredentials: null as WebRTCCredential | null,
+    activeBusinessNumber: null as BusinessNumber | null,
+    businessNumbers: [] as BusinessNumber[],
   };
 
   if (state.isLoggedIn && state.token) {
@@ -55,20 +64,23 @@ const getInitialState = () => {
 export const useAuthStore = create<AuthState>((set, get) => ({
   ...getInitialState(),
 
-  
+
   initializeUserServices: async () => {
     try {
       const { user } = get();
       await get().getUserDetails();
-      
+
       if (user?.extensionId) {
         await get().webrtcProvisioning(user.extensionId);
+        await get().getBusinessNumbers(user.extensionId);
       }
     } catch (error) {
       console.error('Failed to initialize user services:', error);
       message.error('Failed to initialize user services');
     }
   },
+
+  setStatus: (status: string) => { set({ status }); },
 
   checkEmailPreLogin: async (email: string) => {
     try {
@@ -236,6 +248,30 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  setoutgoingbusinessnumber: async (businessNumberId: string) => {
+    try {
+      const extensionId = get().user?.extensionId;
+      const response = await api.post(
+        `${API_URL}/vmapi/planupdate/setoutgoingbusinessnumber/`,
+        {
+          businessNumberId,
+          agentExtensionId: extensionId
+        }
+      );
+      if (!response.data.success) {
+        message.error("Set primary business number error.");
+      } else {
+        message.success("Set primary business number successfully.");
+        await get().getBusinessNumbers(extensionId || '');
+      }
+      return response.data;
+    } catch (error) {
+      message.error("Set primary business number error.");
+      console.error('Set primary business number error:', error);
+      return { success: false, message: 'Server Error' };
+    }
+  },
+
   logout: () => {
     set({ user: null, token: null, isLoggedIn: false });
     localStorage.removeItem('token');
@@ -272,6 +308,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     } catch (error) {
       console.error('WebRTC provisioning error:', error);
+    }
+  },
+
+  getBusinessNumbers: async (extensionId: string) => {
+    try {
+      const response = await api.post('/vmapi/planupdate/getbusinessnumbers/', {
+        extensionId
+      });
+
+      const data = response.data.businessNumberList;
+      if (data) {
+        const activeBusinessNumber = data.find((num: BusinessNumber) => num.isPrimary) || null;
+        console.log('Business numbers retrieved:', data);
+        console.log('Active business number:', activeBusinessNumber);
+        set({
+          activeBusinessNumber,
+          businessNumbers: data
+        });
+      } else {
+        message.error("Business numbers retrieval error.")
+      }
+    } catch (error) {
+      console.error('Business numbers retrieval error:', error);
     }
   },
 }));

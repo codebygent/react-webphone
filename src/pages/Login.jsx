@@ -128,7 +128,7 @@ const Login = () => {
         </div>
 
         <button
-          className={`w-full max-w-[280px] mx-auto block bg-[#8caea1] text-white font-semibold text-lg rounded-full py-4 shadow-md hover:bg-[#7ba592] transition-colors ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+          className={`w-full max-w-[280px] mx-auto block bg-[var(--ksk-green)] text-white font-semibold text-lg rounded-full py-4 shadow-md hover:bg-[#7ba592] transition-colors ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
           type="submit"
           disabled={loading}
         >

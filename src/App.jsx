@@ -6,6 +6,7 @@ import Todo from './pages/Todo';
 import History from './pages/History';
 import People from './pages/People';
 import Login from './pages/Login';
+import BusinessNumber from './pages/manage/BusinessNumber';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import usePhoneStore from './store/phone.store';
@@ -32,6 +33,7 @@ function AppRoutes() {
           <Route path="/todo" element={<Todo />} />
           <Route path="/history" element={<History />} />
           <Route path="/people" element={<People />} />
+          <Route path="/manage/business-number" element={<BusinessNumber />} />
         </Route>
       </Route>
     </Routes>

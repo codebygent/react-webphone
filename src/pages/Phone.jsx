@@ -1,4 +1,5 @@
 import '../assets/styles/uj-phone.scss';
+import { useNavigate } from 'react-router-dom';
 import DialPad from '../components/phone/DialPad';
 import * as UJP from '../store/uj-phone';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -20,12 +21,16 @@ import {
 } from '@fortawesome/free-regular-svg-icons';
 import usePhoneStore from '../store/phone.store';
 import useHistoryStore from '../store/history.store';
+import { useAuthStore } from '../store/authStore';
 import { initializeStores } from '../store/uj-phone';
 import { useState, useEffect } from 'react';
 
 export default function Phone() {
   const { isInCall, isIncomingCall, setInCall, setIncomingCall } = usePhoneStore();
   const historyStore = useHistoryStore();
+  const navigate = useNavigate();
+  const businessNumber = useAuthStore((state) => state.activeBusinessNumber);
+
 
   useEffect(() => {
     initializeStores({
@@ -91,6 +96,10 @@ export default function Phone() {
             <button onClick={handleDialByLine} className="uj-btn-circle text-white bg-green-600">
               <FontAwesomeIcon icon={faPhone} size="2x" className="" />
             </button>
+          </div>
+          <div className='mb-4 flex'>
+            <h2 className='text-lg '>{ businessNumber?.formattedAssociatedNumber }</h2>
+            <a className=' ml-3 text-lg' onClick={() => navigate("/manage/business-number")}> Manage </a>
           </div>
         </div>
       </div>

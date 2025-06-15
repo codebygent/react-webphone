@@ -2617,6 +2617,7 @@ let codes = {
     "502": "CalledNetwork is not Responding",
     "503": "Calling Network is down or overloaded",
     "504": "Calling Network is not Responding",
+    "0": "Called Number is busy",
 }
 //#endregion
 
@@ -2714,8 +2715,8 @@ function RegisterEvents() {
             $("#dialText").val("");
             $(".uj-divInCallContainer").hide();
             $(".uj-DivAnswerCall").hide();
-            var msg = codes[statusCode] || `Status : ${statusCode} `;
-            message.error(msg);
+            var msg = codes[statusCode] || `Call Ended.`;
+            message.info(msg);
             console.log(" Call Teminated ==== > ", statusCode, msg, line);
             setInCall(false);
             setIncomingCall(false);

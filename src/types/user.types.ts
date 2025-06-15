@@ -74,3 +74,20 @@ export interface WebRTCCredential {
     transport: string;
     username: string;
 }
+
+
+export interface BusinessNumber {
+  country: string; // e.g., "GH"
+  formattedAssociatedNumber: string; // e.g., "+233 (0242) 439-881"
+  city: string; // e.g., "MTN"
+  prefix: string; // e.g., "024"
+  isPrimary: boolean;
+  guid: string;
+  tag: string; // e.g., "Team"
+  appInstance: {
+    guid: string;
+    type: string; // e.g., "miniIVR"
+  };
+  tollFree: boolean;
+  associatedNumber: string; // e.g., "+233242439881"
+}

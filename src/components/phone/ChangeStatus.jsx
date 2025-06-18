@@ -16,7 +16,7 @@ const STATUS_OPTIONS = [
 
 // Accept open and onCancel as props
 const ChangeStatusModal = ({ open, onCancel }) => {
-    const {userDetails,status,setStatus} = useAuthStore((state) => state);
+    const {user,status,setStatus} = useAuthStore((state) => state);
     const [loading, setLoading] = useState(false);
 
     const handleChange = (value) => setStatus(value);
@@ -27,7 +27,7 @@ const ChangeStatusModal = ({ open, onCancel }) => {
             const response = await api.post(
                 `/vmapi/generictelephonyconnector/saveagentappstatus/`,
                 {
-                    userId: userDetails?.userId,
+                    userId: user?.extensionId,
                     agentStatus: status
                 }
             );

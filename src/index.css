@@ -56,3 +56,21 @@ li a.flex.text-primary {
 .hist-height {
   height: calc(var(--app-height) - 155px)
 }
+
+.ksk-button {
+  background-color: var(--ksk-green);
+  color: white;
+  border-radius: 0px;
+  font-family: var(--default-font-family);
+}
+.ksk-button:hover {
+  background-color: var(--ksk-purple);
+}
+.ksk-button-secondary{
+  border-radius: 0px;
+  background-color: var(--ksk-grey);
+  color: white;
+}
+.ksk-button-secondary:hover {
+  background-color: var(--ksk-purple);
+}

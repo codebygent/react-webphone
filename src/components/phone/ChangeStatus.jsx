@@ -52,6 +52,8 @@ const ChangeStatusModal = ({ open, onCancel }) => {
             onOk={handleOk}
             onCancel={onCancel}
             confirmLoading={loading}
+            okButtonProps={{ className:'ksk-button' }}
+            cancelButtonProps={{ className:'ksk-button-secondary' }}
             okText="Update"
         >
             <Select

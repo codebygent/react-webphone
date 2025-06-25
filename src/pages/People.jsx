@@ -10,7 +10,7 @@ import * as UJP from '../store/uj-phone';
 export default function People() {
   const { contacts, teammates, isLoading, error, getFilteredTeams, getFilteredContacts, fetchContacts, fetchTeammates } = useContactsStore();
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('contacts');
+  const [activeTab, setActiveTab] = useState('teams');
   const navigate = useNavigate();
   const filteredContacts = getFilteredContacts(searchTerm);
   const filteredTeams = getFilteredTeams(searchTerm);
@@ -51,6 +51,7 @@ export default function People() {
           className={`flex-1 py-3 text-center font-semibold bg-white border-r border-[#b6d4c6] 
             ${activeTab === 'contacts' ? 'text-[var(--ksk-pink)]' : 'text-gray-700'}`}
           type="button"
+          disabled
           onClick={() => setActiveTab('contacts')}
         >
           Contacts

@@ -314,7 +314,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   getBusinessNumbers: async (extensionId: string) => {
     try {
       const response = await api.post('/vmapi/planupdate/getuserbusinessnumbers/', {
-        extensionId
+        agentExtensionId: extensionId
       });
 
       const data = response.data.businessNumberList;

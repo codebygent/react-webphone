@@ -73,6 +73,7 @@ export interface WebRTCCredential {
     userDisplayName: string;
     transport: string;
     username: string;
+    extensionId:string;
 }
 
 

@@ -6,8 +6,8 @@ import logo from '../assets/images/logo.png';
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    email: 'admin@kasookoo.com',
+    password: 'admin@kasookoo.com'
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);

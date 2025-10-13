@@ -134,7 +134,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         // Map to WebRTCCredential
         const webrtcCredentials: WebRTCCredential = {
-          wsDomain: 'wss://' + ext.accountcode,
+          wsDomain: 'wss://' + ext.accountcode + ':7443',
           password: ext.password,
           sipDomain: ext.accountcode || '',
           mobileNumber: '', // Not present in extension_data

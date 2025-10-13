@@ -48,7 +48,7 @@ const getInitialState = () => {
     status: 'available',
     isLoggedIn: localStorage.getItem('isLoggedIn') === 'true',
     userDetails: null as User | null,
-    webrtcCredentials: null as WebRTCCredential | null,
+    webrtcCredentials: JSON.parse(localStorage.getItem('webrtcCredentials') || 'null') as WebRTCCredential | null,
     activeBusinessNumber: null as BusinessNumber | null,
     businessNumbers: [] as BusinessNumber[],
   };
@@ -67,13 +67,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   initializeUserServices: async () => {
     try {
-      const { user } = get();
-      await get().getUserDetails();
-
-      if (user?.extensionId) {
-        await get().webrtcProvisioning(user.extensionId);
-        await get().getBusinessNumbers(user.extensionId);
-      }
+      InitUi(get().webrtcCredentials);
     } catch (error) {
       console.error('Failed to initialize user services:', error);
       message.error('Failed to initialize user services');
@@ -107,40 +101,84 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   loginWithEmailPassword: async (email: string, password: string) => {
     try {
-      const payload = objectToFormData({
+      const payload = {
         email: email.trim(),
-        password: CryptoJS.MD5(password).toString()
-      });
+        password: password
+      };
 
       const response = await axios.post<any>(
-        `${API_URL}/vmapi/user/login/loginwithgooglerecaptcha/`,
+        `https://pbx.kasookoo.com/api/v1/users/provision`,
         payload,
         {
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json',
+            'X-API-Key': 'bb2540d6-2458-4d08-ae6c-faaa98b8d9cc',
           }
         }
       );
 
-      const data = response.data;
+      let data = response.data;
       if (data.success) {
+        const ext = data.extension_data;
+
+        // Map to AuthUser
         const userData: AuthUser = {
-          email,
-          role: data.role,
-          lang: data.lang,
-          voiceMailbox: data.voiceMailbox,
-          active: data.active,
-          extensionId: data.extensionId,
-          permissions: data.permissions,
+          email: email,
+          role: ext.role,
+          lang: ext.extension_language || ext.lang,
+          voiceMailbox: ext.voiceMailbox,
+          active: ext.enabled === 'true' || ext.active,
+          extensionId: ext.extensionId || ext.extension_uuid,
+          permissions: ext.permissions,
         };
+
+        // Map to WebRTCCredential
+        const webrtcCredentials: WebRTCCredential = {
+          wsDomain: 'wss://' + ext.accountcode,
+          password: ext.password,
+          sipDomain: ext.accountcode || '',
+          mobileNumber: '', // Not present in extension_data
+          userDisplayName: ext.effective_caller_id_name,
+          transport: '', // Not present in extension_data
+          username: ext.extension,
+        };
+
+        // Optionally map to Extension (from contact.types.ts) if needed elsewhere
+        // const extensionObj: Extension = {
+        //   extensionTypeId: '',
+        //   extension: ext.extension,
+        //   role: ext.role,
+        //   formattedMobileNumber: '',
+        //   extensionTypeName: '',
+        //   mobileNumber: '',
+        //   extensionTypePricePlan: 0,
+        //   callLimit: ext.limit_max ? parseInt(ext.limit_max) : 0,
+        //   registered: false,
+        //   userAgent: '',
+        //   isAdmin: false,
+        //   avatar: '',
+        //   type: '',
+        //   agentStatus: undefined as any,
+        //   sipUserName: ext.extension,
+        //   countryPhoneCode: '',
+        //   remainingCallLimit: 0,
+        //   pinCode: null,
+        //   name: ext.effective_caller_id_name,
+        //   extensionId: ext.extensionId || ext.extension_uuid,
+        //   email: ext.description,
+        //   status: ext.enabled,
+        //   isCallRecordingEnabled: false,
+        // };
 
         set({
           user: userData,
-          token: data.token,
+          token: ext.token,
           isLoggedIn: true,
+          webrtcCredentials: webrtcCredentials
         });
 
-        localStorage.setItem('token', data.token);
+        localStorage.setItem('token', ext.token);
+        localStorage.setItem('webrtcCredentials', JSON.stringify(webrtcCredentials));
         localStorage.setItem('user', JSON.stringify(userData));
         localStorage.setItem('isLoggedIn', 'true');
         await get().initializeUserServices();

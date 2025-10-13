@@ -125,7 +125,7 @@ function formatShortDuration(seconds) {
 // =======
 
 export function InitUi(data) {
-
+    console.log("Initializing UI",data)
     $("#regStatus").html("Starting connection ....")
     profileName = data.userDisplayName;
     wssServer = data.wsDomain;

@@ -1,68 +1,68 @@
-interface AppInstance {
-    guid: string;
-    type: string;
-}
-
-interface AssociatedNumber {
-    guid: string;
-    associatedNumber: string;
-    country: string;
-    city: string;
-    prefix: string;
-    tag: string;
-    isPrimary: boolean;
-    tollFree: boolean;
-    appInstance: AppInstance;
-}
-
-interface UserNumber {
-    guid: string;
-    number: string;
-    associatedNumber: AssociatedNumber;
-}
-
-interface VerifiedEmail {
-    emailId: string;
-    isVerified: boolean;
-    primary: boolean;
-}
-
-export interface User {
-    userId: string;
-    firstName: string;
-    lastName: string;
-    paymentGateway: string;
-    contactNumber: string;
-    userNumbers: UserNumber[];
-    language: string;
-    bookmark: string;
-    linkedAccounts: any[]; // no details provided, so using any[]
-    verifiedEmails: VerifiedEmail[];
-    imAddresses: any[]; // no details provided, so using any[]
-    keyValuePairs: string; // looks like a JSON string
-    features: any[]; // no details provided, so using any[]
-    appInstances: AppInstance[];
-    callTransferActive: boolean;
-    isAccountBlocked: boolean;
-    smsSendingActive: boolean;
-    restricted: boolean;
-    dialExtension: boolean;
-    dialExtensionText: string;
-    userExtensionId: string;
-    isConnected: boolean;
-}
 
 export interface AuthUser {
-    role?: string;
-    email?: string;
-    mobile?: string;
-    lang: string;
-    voiceMailbox: boolean;
-    active: boolean;
-    extensionId: string;
-    permissions?: {
-      [key: string]: string;
-    };
+    extension_uuid: string;
+    domain_uuid: string;
+    extension: string;
+    number_alias: string | null;
+    password: string;
+    accountcode: string;
+    effective_caller_id_name: string;
+    effective_caller_id_number: string;
+    outbound_caller_id_name: string;
+    outbound_caller_id_number: string;
+    emergency_caller_id_name: string | null;
+    emergency_caller_id_number: string | null;
+    directory_first_name: string | null;
+    directory_last_name: string | null;
+    directory_visible: string;
+    directory_exten_visible: string;
+    max_registrations: string | null;
+    limit_max: string;
+    limit_destination: string;
+    missed_call_app: string | null;
+    missed_call_data: string | null;
+    user_context: string;
+    toll_allow: string | null;
+    call_timeout: string;
+    call_group: string | null;
+    call_screen_enabled: string;
+    user_record: string;
+    hold_music: string;
+    auth_acl: string | null;
+    cidr: string | null;
+    sip_force_contact: string | null;
+    nibble_account: string | null;
+    sip_force_expires: string | null;
+    mwi_account: string | null;
+    sip_bypass_media: string | null;
+    unique_id: string | null;
+    dial_string: string | null;
+    dial_user: string | null;
+    dial_domain: string | null;
+    do_not_disturb: string | null;
+    forward_all_destination: string | null;
+    forward_all_enabled: string | null;
+    forward_busy_destination: string | null;
+    forward_busy_enabled: string | null;
+    forward_no_answer_destination: string | null;
+    forward_no_answer_enabled: string | null;
+    forward_user_not_registered_destination: string | null;
+    forward_user_not_registered_enabled: string | null;
+    follow_me_uuid: string | null;
+    follow_me_enabled: string | null;
+    follow_me_destinations: string | null;
+    extension_language: string | null;
+    extension_dialect: string;
+    extension_voice: string;
+    extension_type: string | null;
+    enabled: string;
+    description: string;
+    absolute_codec_string: string | null;
+    force_ping: string | null;
+    insert_date: string;
+    insert_user: string;
+    update_date: string;
+    update_user: string;
 }
 
 export interface WebRTCCredential {
@@ -73,21 +73,4 @@ export interface WebRTCCredential {
     userDisplayName: string;
     transport: string;
     username: string;
-}
-
-
-export interface BusinessNumber {
-  country: string; // e.g., "GH"
-  formattedAssociatedNumber: string; // e.g., "+233 (0242) 439-881"
-  city: string; // e.g., "MTN"
-  prefix: string; // e.g., "024"
-  isPrimary: boolean;
-  guid: string;
-  tag: string; // e.g., "Team"
-  appInstance: {
-    guid: string;
-    type: string; // e.g., "miniIVR"
-  };
-  tollFree: boolean;
-  associatedNumber: string; // e.g., "+233242439881"
 }

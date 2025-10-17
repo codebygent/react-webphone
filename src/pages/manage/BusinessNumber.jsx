@@ -6,6 +6,7 @@ export default function BusinessNumber() {
 
 
   const { setoutgoingbusinessnumber, businessNumbers } = useAuthStore((state) => state);
+  if (!businessNumbers) return null;
   return (
 
     <div>

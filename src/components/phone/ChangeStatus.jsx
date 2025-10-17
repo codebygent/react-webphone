@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Modal, Select, message } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Modal, Select, Input, Form, message } from 'antd';
 import api from './../../store/axios.config';
 import { useAuthStore } from './../../store/authStore';
 
@@ -16,29 +16,39 @@ const STATUS_OPTIONS = [
 
 // Accept open and onCancel as props
 const ChangeStatusModal = ({ open, onCancel }) => {
-    const {user,status,setStatus} = useAuthStore((state) => state);
+    const { user, status, setStatus, userStatus, executeAgentAction } = useAuthStore((state) => state);
     const [loading, setLoading] = useState(false);
+    const [form] = Form.useForm();
+
+    useEffect(() => {
+        if (userStatus) {
+            setStatus(userStatus.status || 'available');
+        }
+    }, [userStatus, setStatus]);
 
     const handleChange = (value) => setStatus(value);
 
     const handleOk = async () => {
         setLoading(true);
         try {
-            const response = await api.post(
-                `/vmapi/generictelephonyconnector/saveagentappstatus/`,
-                {
-                    userId: user?.extensionId,
-                    agentStatus: status
-                }
+            const values = await form.validateFields();
+            const result = await executeAgentAction(
+                values.action,
+                user?.extension || '',
+                values.extension,
+                values.pause,
+                values.server
             );
-            if (!response.data.success) {
-                message.error("Set agent status error.");
+            if (!result.success) {
+                message.error(result.message || "Execute agent action error.");
             } else {
-                message.success("Agent status updated successfully.");
+                message.success("Agent action executed successfully.");
             }
+
+            onCancel();
         } catch (error) {
-            message.error("Set agent status error.");
-            console.error('Set agent status error:', error);
+            message.error("Operation failed.");
+            console.error('Operation error:', error);
         } finally {
             setLoading(false);
         }
@@ -46,26 +56,38 @@ const ChangeStatusModal = ({ open, onCancel }) => {
 
     return (
         <Modal
-            title="Change Agent Status"
+            title="Agent Actions"
             open={open}
-            width={300}
+            width={400}
             onOk={handleOk}
             onCancel={onCancel}
             confirmLoading={loading}
-            okButtonProps={{ className:'ksk-button' }}
-            cancelButtonProps={{ className:'ksk-button-secondary' }}
+            okButtonProps={{ className: 'ksk-button' }}
+            cancelButtonProps={{ className: 'ksk-button-secondary' }}
             okText="Update"
         >
-            <Select
-                id="agentStatusType"
-                value={status}
-                onChange={handleChange}
-                style={{ width: '100%' }}
-            >
-                {STATUS_OPTIONS.map(opt => (
-                    <Option key={opt.value} value={opt.value}>{opt.label}</Option>
-                ))}
-            </Select>
+
+            <Form form={form} layout="vertical">
+                <Form.Item
+                    name="action"
+                    label="Action"
+                    rules={[{ required: true, message: 'Please input the action!' }]}
+                >
+                    <Input placeholder="Enter action" />
+                </Form.Item>
+                <Form.Item
+                    name="pause"
+                    label="Pause"
+                >
+                    <Input placeholder="Enter pause duration (optional)" />
+                </Form.Item>
+                <Form.Item
+                    name="server"
+                    label="Server"
+                >
+                    <Input placeholder="Enter server (optional)" />
+                </Form.Item>
+            </Form>
         </Modal>
     );
 };
